@@ -1,6 +1,8 @@
 import { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
 import { DataSource } from "typeorm";
 
+import {User, Channel, ChannelToUser} from "../models";
+
 const connectDB = new DataSource({
     type: "postgres",
     host: process.env.POSTGRES_HOST || "localhost",
@@ -8,7 +10,7 @@ const connectDB = new DataSource({
     username: process.env.POSTGRES_USER || "postgres",
     password: process.env.POSTGRES_PASSWORD || "postgres",
     database: process.env.POSTGRES_DB || "postgres",
-    entities: [],
+    entities: [User, Channel, ChannelToUser],
     synchronize: true,
 });
 

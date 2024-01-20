@@ -3,7 +3,7 @@ services:
   db:
     image: postgres:latest
     environment:
-      - POSTGRES_DB=express-ts
+      - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
   app:
@@ -17,7 +17,7 @@ services:
     depends_on:
       - db
     environment:
-      - POSTGRES_DB=express-ts
+      - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_HOST=db
