@@ -2,7 +2,7 @@ import { connectDB } from '../config/database';
 import { Channel } from '../models/channel';
 
 
-export const getChannel = async (): Promise<Array<Channel>> => {
+  export const getChannel = async (): Promise<Array<Channel>> => {
     const channelRepository = connectDB.getRepository(Channel);
     return channelRepository.find();
   };

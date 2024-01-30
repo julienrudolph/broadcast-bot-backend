@@ -18,7 +18,7 @@ channelRouter.post("/", async (req, res) => {
 channelRouter.get("/:id", async (req, res) => {
   const controller = new ChannelController();
   const response = await controller.getChannelById(req.params.id);
-  if (!response) res.status(404).send({ message: "No user found" });
+  if (!response) res.status(404).send({ message: "No channel found" });
   return res.send(response);
 });
 

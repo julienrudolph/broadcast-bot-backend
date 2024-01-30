@@ -2,7 +2,7 @@ import { connectDB } from '../config/database';
 import { User } from '../models/user';
 
 
-export const getUsers = async (): Promise<Array<User>> => {
+  export const getUsers = async (): Promise<Array<User>> => {
     const userRepository = connectDB.getRepository(User);
     return userRepository.find();
   };

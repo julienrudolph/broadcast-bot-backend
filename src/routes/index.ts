@@ -24,6 +24,6 @@ router.get("/ping",async (_req, res) => {
 });
 
 router.use("/users", userRouter);
-router.use("/channel", channelRouter);
+router.use("/channels", channelRouter);
 
 export default router;

@@ -5,7 +5,6 @@ import {
   createChannel,
   getChannelById,
 } from "../repositories/channel.repo";
-import { create } from "domain";
 
 @Route("channels")
 @Tags("Channel")

@@ -22,6 +22,7 @@ app.use(
     },
   })
 );
+
 dataSource.initialize()
   .then(() => {
     console.log(`Data Source has been initialized`);
