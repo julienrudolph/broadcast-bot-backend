@@ -34,9 +34,9 @@ Project is: _in progress_
 
 
 ## database schema
-
+user
 +-------------+--------------+----------------------------+
-|                        user                             |
+| name        | type         | properties                 |
 +-------------+--------------+----------------------------+
 | id          | number       | PRIMARY KEY AUTO_INCREMENT |
 | firstname   | string       |                            |
