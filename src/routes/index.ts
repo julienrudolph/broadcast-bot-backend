@@ -14,7 +14,12 @@ router.get("/",async (_req, res) => {
 router.post("/", async (_req, res) => {
   const controller = new ServiceController();
   const response = await controller.getPostResponse(_req.body);
-  return res.send(response);
+  if(response){
+    res.status(200);
+    return res.send(response);
+  }else{
+    res.status(503);
+  }
 });
 
 router.get("/ping",async (_req, res) => {
@@ -24,6 +29,6 @@ router.get("/ping",async (_req, res) => {
 });
 
 router.use("/users", userRouter);
-router.use("/channels", channelRouter);
+router.use("/channel", channelRouter);
 
 export default router;

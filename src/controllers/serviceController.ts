@@ -13,7 +13,7 @@ interface PostResponse{
   message: string;
 }
 
-interface BotInitalRequest{
+interface BotRequest{
     /*
     "type": "conversation.bot_request",
     "botId": "493ede3e-3b8c-4093-b850-3c2be8a87a95",  // Unique identifier for this bot
@@ -32,13 +32,39 @@ interface BotInitalRequest{
     handle: string;
     locale: string;
     token: string;
+    messageId: string;
+    text: IText;
+    attachment: IAttachment;
+
+}
+
+interface IMeta{
+  assetId: string;
+  assetToken: string
+  sha256: string;
+  otrKey: string;
+}
+
+interface IAttachment{
+  size: number;
+  mimeType: string;
+  width: string;
+  height: string;
+  name: string;
+  duration: number;
+  levels: number[];
+  meta: IMeta;
+
+}
+
+interface IText{
+  data: string
 }
 
 interface EchoDemo{
     type: string;
     text: string;
-}
-
+} 
 
 @Route("/")
 export default class ServiceController {
@@ -50,13 +76,16 @@ export default class ServiceController {
   }
 
   @Post("/")
-  public async getPostResponse(@Body() body:EchoDemo): Promise<PostResponse>{
+  public async getPostResponse(@Body() body:BotRequest): Promise<BotRequest>{
     console.log(body);
-    const type:string = body.type
-    const message:string = body.text
-    return {
-        message: type + " - " + message 
+    const request = body;
+    // only respond to text events
+    if (body.type === 'conversation.new_text') {
+        // echo text back to the conversation by responding to a REST call from Roman
+        body.type = 'text';
+        body.text =  {data: `You said: ${body.text.data}`};
     }
-  } 
-
+    return body;
+  }
 }
+
