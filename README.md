@@ -34,10 +34,11 @@ Project is: _in progress_
 
 
 ## database schema
-user
-+-------------+--------------+----------------------------+
+
+### user
+
 | name        | type         | properties                 |
-+-------------+--------------+----------------------------+
+| ----------- | ------------ | -------------------------- |
 | id          | number       | PRIMARY KEY AUTO_INCREMENT |
 | firstname   | string       |                            |
 | lastname    | string       |                            |
@@ -47,25 +48,24 @@ user
 | preKey      | string       |                            |
 | createdAt   | Date         |                            |
 | updateAt    | Date         |                            |
-+-------------+--------------+----------------------------+
 
-+-------------+--------------+----------------------------+
-|                        channel                          |
-+-------------+--------------+----------------------------+
-| id          | number      | PRIMARY KEY AUTO_INCREMENT |
+### channel
+
+| name        | type         | properties                 |
+| ----------- | ------------ | -------------------------- |
+| id          | number       | PRIMARY KEY AUTO_INCREMENT |
 | name        | string       |                            |
 | secToken    | string       |                            |
 | createdAt   | Date         |                            |
 | updateAt    | Date         |                            |
-+-------------+--------------+----------------------------+
 
-+-------------+--------------+----------------------------+
-|                        channelToUser                    |
-+-------------+--------------+----------------------------+
+### channelToUser
+
+| name        | type         | properties                 |
+| ----------- | ------------ | -------------------------- |
 | questionId  | number       | PRIMARY KEY FOREIGN KEY    |
 | categoryId  | number       | PRIMARY KEY FOREIGN KEY    |
 | id          | number       |                            |
 | isMuted     | boolean      |                            |
 | isApproved  | boolean      |                            |
-+-------------+--------------+----------------------------+
 
