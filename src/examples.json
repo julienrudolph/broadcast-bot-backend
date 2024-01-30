@@ -1,0 +1,9 @@
+{
+    "firstname": "Jack",
+    "lastname": "Daniels",
+    "email": "jack.daniels@whiskey.com",
+    "approved": "false",
+    "userId": "GUID",
+    "isAdmin": "false",
+    "userToken": "GUID"
+}

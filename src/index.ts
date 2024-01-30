@@ -1,10 +1,10 @@
 import express, { Application } from "express";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
-import {createConnection } from "typeorm";
 
 import Router from "./routes";
-import dbConfig from "./config/database";
+import Context from "./models/context";
+import dataSource from "./config/database";
 
 const PORT = process.env.PORT || 8000;
 
@@ -22,8 +22,7 @@ app.use(
     },
   })
 );
-
-dbConfig.initialize()
+dataSource.initialize()
   .then(() => {
     console.log(`Data Source has been initialized`);
   })

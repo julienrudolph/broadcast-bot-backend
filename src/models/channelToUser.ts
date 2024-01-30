@@ -16,6 +16,9 @@ export class ChannelToUser {
     @Column()
     public isMuted!: boolean
 
+    @Column()
+    public isApproved!: boolean;
+
     @ManyToOne(() => User, (user) => user.channelToUser)
     public user!: User
 

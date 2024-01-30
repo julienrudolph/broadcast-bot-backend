@@ -13,6 +13,9 @@ import {
     id!: number;
 
     @Column()
+    secToken!: string;
+
+    @Column()
     name!: string;
   
     @Column()

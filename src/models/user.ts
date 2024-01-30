@@ -32,6 +32,9 @@ import { ChannelToUser } from "./channelToUser";
     @Column()
     isAdmin!: boolean;
 
+    @Column()
+    userToken!: boolean;
+
     @CreateDateColumn()
     createdAt!: Date;
   

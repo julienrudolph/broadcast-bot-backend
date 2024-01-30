@@ -1,9 +1,7 @@
-import { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
 import { DataSource } from "typeorm";
-
 import {User, Channel, ChannelToUser} from "../models";
 
-const connectDB = new DataSource({
+export const connectDB = new DataSource({
     type: "postgres",
     host: process.env.POSTGRES_HOST || "localhost",
     port: Number(process.env.POSTGRES_PORT) || 5432,
