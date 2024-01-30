@@ -24,16 +24,13 @@ import { ChannelToUser } from "./channelToUser";
     email!: string;
 
     @Column()
-    approved!: boolean;
-
-    @Column()
     userId!: string;
-  
-    @Column()
-    isAdmin!: boolean;
 
     @Column()
-    userToken!: boolean;
+    userToken!: string;
+
+    @Column()
+    preKey!: string;
 
     @CreateDateColumn()
     createdAt!: Date;

@@ -1,6 +1,10 @@
 import { DataSource } from "typeorm";
 import {User, Channel, ChannelToUser} from "../models";
+import * as dotenv from "dotenv";
 
+dotenv.config();
+
+console.log("dotenv: " + process.env.TEST);
 export const connectDB = new DataSource({
     type: "postgres",
     host: process.env.POSTGRES_HOST || "localhost",
