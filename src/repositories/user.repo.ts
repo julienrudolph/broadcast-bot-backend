@@ -16,13 +16,9 @@ export const getUsers = async (): Promise<Array<User>> => {
     });
   };
   
-  export const getUser = async (id: number): Promise<User | null> => {
+  export const getUserById = async (id: number): Promise<User | null> => {
     const userRepository = connectDB.getRepository(User);
     const user = await userRepository.findOne({where: {id: id}});
     if (!user) return null;
     return user;
   };
-
-  export const addUserToBot = async (userId: number, botId: number): Promise<boolean> => {
-    return true;
-  } 

@@ -3,7 +3,7 @@ import { User } from "../models";
 import {
   getUsers,
   createUser,
-  getUser,
+  getUserById,
 } from "../repositories/user.repo";
 
 @Route("users")
@@ -20,7 +20,7 @@ export default class UserController {
   }
 
   @Get("/:id")
-  public async getUser(@Path() id: string): Promise<User | null> {
-    return getUser(Number(id));
+  public async getUserById(@Path() id: string): Promise<User | null> {
+    return getUserById(Number(id));
   }
 }

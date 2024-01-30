@@ -17,7 +17,7 @@ userRouter.post("/", async (req, res) => {
 
 userRouter.get("/:id", async (req, res) => {
   const controller = new UserController();
-  const response = await controller.getUser(req.params.id);
+  const response = await controller.getUserById(req.params.id);
   if (!response) res.status(404).send({ message: "No user found" });
   return res.send(response);
 });

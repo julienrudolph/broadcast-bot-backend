@@ -17,9 +17,6 @@ import {
 
     @Column()
     name!: string;
-  
-    @Column()
-    isMuted!: boolean;
 
     @CreateDateColumn()
     createdAt!: Date;
