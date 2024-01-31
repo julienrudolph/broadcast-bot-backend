@@ -74,7 +74,7 @@ export default class ServiceController {
       message: "Root"
     }
   }
-
+/*
   @Post("/")
   public async getPostResponse(@Body() body:BotRequest): Promise<BotRequest>{
     console.log(body);
@@ -87,7 +87,7 @@ export default class ServiceController {
     }
     return body;
   }
-
+*/
   @Post("/")
   public async echoResponse(@Body() body:EchoDemo): Promise<EchoDemo>{
     console.log(body);

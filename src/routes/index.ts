@@ -13,7 +13,7 @@ router.get("/",async (_req, res) => {
 
 router.post("/", async (_req, res) => {
   const controller = new ServiceController();
-  const response = await controller.getPostResponse(_req.body);
+  const response = await controller.echoResponse(_req.body);
   if(response){
     res.status(200);
     return res.send(response);
