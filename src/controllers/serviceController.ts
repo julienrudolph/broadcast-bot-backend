@@ -63,7 +63,7 @@ interface IText{
 
 interface EchoDemo{
     type: string;
-    text: string;
+    text: IText;
 } 
 
 @Route("/")
@@ -87,5 +87,19 @@ export default class ServiceController {
     }
     return body;
   }
+
+  @Post("/")
+  public async echoResponse(@Body() body:EchoDemo): Promise<EchoDemo>{
+    console.log(body);
+    const request = body;
+    // only respond to text events
+    if (body.type === 'conversation.new_text') {
+        // echo text back to the conversation by responding to a REST call from Roman
+        body.type = 'text';
+        body.text =  {data: `You said: ${body.text.data}`};
+    }
+    return body;
+  }
+
 }
 

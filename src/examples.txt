@@ -1,0 +1,9 @@
+# echo bot demo test call
+curl -X 'POST' \
+  'http://localhost:8000/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{"type":"conversation.new_text", "text": { "data": "Hello World"}}'
+
+# response 
+  {"type":"text","text":{"data":"You said: Hello World"}}%      

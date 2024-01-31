@@ -6,6 +6,10 @@ import Router from "./routes";
 import Context from "./models/context";
 import dataSource from "./config/database";
 
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
 const PORT = process.env.PORT || 8000;
 
 const app: Application = express();
