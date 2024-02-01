@@ -5,16 +5,19 @@ import { Channel } from "./channel"
 @Entity()
 export class ChannelToUser {
     @PrimaryGeneratedColumn()
-    public channelToUserID!: number
+    public channelToUserID!: number;
 
     @Column()
-    public channelId!: number
+    public channelId!: number;
 
     @Column()
-    public userId!: number
+    public userId!: number;
+    
+    @Column()
+    public isAdmin!: boolean;
 
     @Column()
-    public isMuted!: boolean
+    public isMuted!: boolean;
 
     @Column()
     public isApproved!: boolean;

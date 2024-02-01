@@ -70,8 +70,17 @@ interface EchoDemo{
 export default class ServiceController {
   @Get("/")
   public async getResponse(): Promise<ServiceResponse> {
+    console.log()
     return {
-      message: "Root"
+      message: "ServiceResponse"
+    }
+  }
+
+  @Post("/")
+  public async getTestPost(@Body() body:EchoDemo): Promise<ServiceResponse> {
+    console.log(body)
+    return {
+      message: "ServiceResponse"
     }
   }
 /*
@@ -87,7 +96,7 @@ export default class ServiceController {
     }
     return body;
   }
-*/
+
   @Post("/")
   public async echoResponse(@Body() body:EchoDemo): Promise<EchoDemo>{
     console.log(body);
@@ -100,6 +109,6 @@ export default class ServiceController {
     }
     return body;
   }
-
+  */
 }
 
