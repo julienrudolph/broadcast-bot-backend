@@ -8,7 +8,7 @@ import {
 
 @Route("channels")
 @Tags("Channel")
-export default class UserController {
+export default class ChannelController {
   @Get("/")
   public async getChannel(): Promise<Array<Channel>> {
     return getChannel();
