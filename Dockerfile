@@ -11,5 +11,5 @@ COPY package* ./
 RUN npm install --production
 COPY --from=builder ./app/public ./public
 COPY --from=builder ./app/build ./build
-EXPOSE 8000
+EXPOSE 8888
 CMD ["npm", "start"]
