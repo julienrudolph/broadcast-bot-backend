@@ -22,4 +22,34 @@ export default class RomanController {
     console.log(body);
     console.log(header)
   }
+
+  private determmineHandler(isAdmin, body, appkey){
+
+  }
+
+  /*
+    cases:
+
+    user is admin 
+      --> implement actions for keywords
+        - Keywords
+          - /broadcast <Message> - broadcast message to roman
+          - /help - return messages to user with commands
+          - /stats - return sending stats of last broadcast (RC2 /stats broadcastID)
+    user is member
+      --> implement keywords
+        - /help - returns message to user with commands 
+        - /info - return infos concerning bot    
+   */   
+
+
+  // toDo implement admin receives message from channel member
+  private userMessageToAdmin(){}
+
+  private broadcastMessageToRoman(){}
+
+  private getBroadcastStat(id: string){}
+
+  private getHelp(isAdmin: boolean){}
+
 }
