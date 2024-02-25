@@ -3,6 +3,12 @@ import * as Userrepo from '../repositories/user.repo';
 import * as Channelrepo from '../repositories/channel.repo';
 import * as Messagerepo from '../repositories/message.repo';
 
+import * as Utils from '../utils/wirebackend.utils';
+
+import { User } from '../models/user';
+
+import { IConversationInit, IScimUserResponse } from '../interfaces/interfaces';
+ 
 interface HandlerDto {
   body: any
   isUserAdmin: boolean
@@ -50,10 +56,28 @@ export default class RomanController {
     const { type } = body;
     // ToDo find better switch case
     if(type === "conversation.init"){
-      return this.handleInit(isAdmin);
+      return this.handleInit(isAdmin, body);
     }
     if(type === "conversation.new_text"){
       return this.handleText(isAdmin, body, appKey);
+    }
+    if(type === "conversation.bot_request"){
+      /* 
+        toDo implement strategy with handle
+        {
+          "type": "conversation.bot_request",
+          "botId": "493ede3e-3b8c-4093-b850-3c2be8a87a95",  // Unique identifier for this bot
+          "userId": "4dfc5c70-dcc8-4d9e-82be-a3cbe6661107", // User who requested this bot  
+          "conversationId": "5dfc5c70-dcc8-4d9e-82be-a3cbe6661106",  // ConversationId 
+          "conversation": "Bot Example Conversation",                // Conversation name
+          "handle": "dejan_wire",  // username of the user who requested this bot
+          "locale": "en_US",       // locale of the user who requested this bot    
+          "token": "..."           // Access token. Store this token so the bot can post back later
+        }
+        */ 
+    }
+    if(type === "conversation.asset.preview"){
+      return this.handleAssetPreview();
     }
   }
 
@@ -75,7 +99,6 @@ export default class RomanController {
 
   // toDo implement admin receives message from channel member
   private async handleText(isAdmin: boolean, body: any, appKey: string){
-    let message;
     const {text, userId , messageId} = body;
     const messageText:string = text?.data ?? '';
     if(isAdmin){
@@ -123,8 +146,19 @@ export default class RomanController {
     } 
   }
 
-  private async handleInit(isAdmin: boolean): Promise<IMessage> {
-    // ToDo convert messages to parameter
+  private async handleAssetPreview(){};
+
+  private async handleInit(isAdmin: boolean, body): Promise<IMessage> {
+    let userInfo = await Utils.getUserRichInfosById(body.userId)
+    /* let newUser:User = {
+      email: userInfo.email,
+      displayName: userInfo.displayName,
+      createdAt: (new Date),
+      updatedAt: (new Date),
+      userId: body.userId,
+
+    }
+    */
     const helpMessageUser = "Sie haben den Dev-Channel der Fraktion abonniert.\n\n" +
                             "/help - zeigt die Liste der Kommandos\n " +
                             "/info - zeigt Informationen über den Kanal\n" ;

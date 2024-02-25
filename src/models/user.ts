@@ -11,8 +11,8 @@ import { ChannelToUser } from "./channelToUser";
 
   @Entity()
   export class User {
-    @PrimaryGeneratedColumn()
-    id!: number;
+    @PrimaryGeneratedColumn('increment')
+    id?: number;
   
     @Column()
     displayName!: string;
@@ -23,11 +23,11 @@ import { ChannelToUser } from "./channelToUser";
     @Column()
     userId!: string;
 
-    @Column()
-    userToken!: string;
+    @Column({nullable: true})
+    userToken?: string;
 
-    @Column()
-    preKey!: string;
+    @Column({nullable: true})
+    preKey?: string;
 
     @CreateDateColumn()
     createdAt!: Date;
@@ -36,5 +36,5 @@ import { ChannelToUser } from "./channelToUser";
     updatedAt!: Date;   
   
     @OneToMany(() => ChannelToUser, channelToUser => channelToUser.user)
-    public channelToUser!: ChannelToUser[];
+    public channelToUser?: ChannelToUser[];
   }
