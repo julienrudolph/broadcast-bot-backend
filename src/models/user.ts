@@ -13,13 +13,10 @@ import { ChannelToUser } from "./channelToUser";
   export class User {
     @PrimaryGeneratedColumn()
     id!: number;
+  
+    @Column()
+    displayName!: string;
 
-    @Column()
-    firstName!: string;
-  
-    @Column()
-    lastName!: string;
-  
     @Column()
     email!: string;
 

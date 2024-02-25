@@ -22,6 +22,9 @@ export class ChannelToUser {
     @Column()
     public isApproved!: boolean;
 
+    @Column()
+    public conversationId: string;
+
     @ManyToOne(() => User, (user) => user.channelToUser)
     public user!: User
 

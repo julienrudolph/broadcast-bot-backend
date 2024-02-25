@@ -3,7 +3,6 @@ import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
 
 import Router from "./routes";
-import Context from "./models/context";
 import dataSource from "./config/database";
 
 import * as dotenv from "dotenv";

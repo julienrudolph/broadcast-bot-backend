@@ -11,6 +11,8 @@ services:
   #    PGADMIN_DEFAULT_PASSWORD: postgres
   db:
     image: postgres:latest
+    networks:
+      - broadcast-bot
     environment:
       - PGUSER=admin
       - POSTGRES_DB=postgres
@@ -27,8 +29,14 @@ services:
       - "8888:8888"
     depends_on:
       - db
+    networks:
+      - broadcast-bot
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_HOST=db
+networks:
+  broadcast-bot:
+    name: botnet
+    external: true
