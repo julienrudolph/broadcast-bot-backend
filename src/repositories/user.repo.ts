@@ -22,3 +22,17 @@ import { User } from '../models/user';
     if (!user) return null;
     return user;
   };
+
+  export const getUserByWireId = async (id: string): Promise<User | null> => {
+    const userRepository = connectDB.getRepository(User);
+    const user = await userRepository.findOne({where: {userId: id}});
+    if (!user) return null;
+    return user;
+  };
+
+  export const removeUser = async(id: number): Promise<boolean | null> => {
+    const userRepository = connectDB.getRepository(User);
+    const user = await userRepository.delete(id);
+    if (!user) return null;
+    return true;  
+  }

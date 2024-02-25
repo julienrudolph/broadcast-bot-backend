@@ -1,6 +1,10 @@
 import { Get, Route, Tags, Post, Body, Path, Header } from "tsoa";
 // import axios from 'axios';
 
+import * as Userrepo from '../repositories/user.repo';
+import * as Channelrepo from '../repositories/channel.repo';
+import * as Messagerepo from '../repositories/message.repo';
+
 interface HandlerDto {
   body: any
   isUserAdmin: boolean
@@ -21,10 +25,32 @@ export default class RomanController {
     const appKey = "eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3dpcmUuY29tIiwic3ViIjoiZDBjZmY5YzctMGIwOS00NjM4LWFiYjUtODFlZDA0ODc1NmIwIn0.qWevLrDlJA_tf46Vw5FC7wzwP93RmqlHRNY62sCRGV8"
     console.log(body);
     console.log(header)
+
+    const { type, userId, messageId } = body;
+
+    if(header.authorization === appKey){
+      if(admins.includes(userId)){
+        await this.determmineHandler(true, body , appKey);
+      }else{
+        await this.determmineHandler(false, body, appKey);
+      }        
+    }
   }
 
-  private determmineHandler(isAdmin, body, appkey){
+  private async determmineHandler(isAdmin, body, appkey){
+    const { type, userId, messageId } = body;
+    if(type === "conversation.init"){
 
+    }else{
+
+    }
+
+    if(isAdmin){
+        
+      }else{
+
+      }  
+    
   }
 
   /*
