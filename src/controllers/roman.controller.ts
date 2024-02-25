@@ -1,6 +1,4 @@
 import { Get, Route, Tags, Post, Body, Path, Header } from "tsoa";
-import {Axios} from 'axios';
-
 import * as Userrepo from '../repositories/user.repo';
 import * as Channelrepo from '../repositories/channel.repo';
 import * as Messagerepo from '../repositories/message.repo';
