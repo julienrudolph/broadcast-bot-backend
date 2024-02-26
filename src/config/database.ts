@@ -1,5 +1,5 @@
 import { DataSource } from "typeorm";
-import {User, Channel, ChannelToUser} from "../models";
+import {User, Channel, ChannelToUser, Message} from "../models";
 
 export const connectDB = new DataSource({
     type: "postgres",
@@ -8,7 +8,7 @@ export const connectDB = new DataSource({
     username: process.env.POSTGRES_USER || "postgres",
     password: process.env.POSTGRES_PASSWORD || "postgres",
     database: process.env.POSTGRES_DB || "postgres",
-    entities: [User, Channel, ChannelToUser],
+    entities: [User, Channel, ChannelToUser, Message],
     synchronize: true,
 });
 

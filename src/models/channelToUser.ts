@@ -4,26 +4,20 @@ import { Channel } from "./channel"
 
 @Entity()
 export class ChannelToUser {
-    @PrimaryGeneratedColumn()
-    public channelToUserID!: number;
-
-    @Column()
-    public channelId!: number;
-
-    @Column()
-    public userId!: number;
+    @PrimaryGeneratedColumn('increment')
+    public channelToUserID?: number;
     
     @Column()
     public isAdmin!: boolean;
 
     @Column()
-    public isMuted!: boolean;
+    public isMuted?: boolean;
 
     @Column()
-    public isApproved!: boolean;
+    public isApproved?: boolean;
 
     @Column()
-    public conversationId: string;
+    public conversationId!: string;
 
     @ManyToOne(() => User, (user) => user.channelToUser)
     public user!: User

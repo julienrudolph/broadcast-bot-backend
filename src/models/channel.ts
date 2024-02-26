@@ -9,8 +9,11 @@ import {
   import { ChannelToUser } from "./channelToUser";
   @Entity()
   export class Channel {
-    @PrimaryGeneratedColumn()
-    id!: number;
+    @PrimaryGeneratedColumn('increment')
+    id?: number;
+
+    @Column()
+    botId!: string;
 
     @Column()
     secToken!: string;
@@ -25,5 +28,5 @@ import {
     updatedAt!: Date;   
 
     @OneToMany(() => ChannelToUser, channelToUser => channelToUser.channel)
-    public channelToUser!: ChannelToUser[];
+    public channelToUser?: ChannelToUser[];
   }

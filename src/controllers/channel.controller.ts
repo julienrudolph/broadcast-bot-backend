@@ -21,6 +21,6 @@ export default class ChannelController {
 
   @Get("/:id")
   public async getChannelById(@Path() id: string): Promise<Channel | null> {
-    return getChannelById(Number(id));
+    return getChannelById(parseInt(id));
   }
 }

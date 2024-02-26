@@ -4,12 +4,10 @@ const scimToken = "9ferq+YwJl+IHBSTWwanMDohVFWYZ5rh4Yqa852ctz4="
 const scimUrl = "https://prod-nginz-https.wire.com/scim/v2"
 
 export const getUserRichInfosById = async (id: string):Promise<IScimUserResponse> => {
-  let content = '';
   return new Promise<IScimUserResponse>((resolve, reject) => {
     let user = fetch(
       scimUrl+"/Users/"+id,{
         headers: {'Accept': 'application/scim+json', 'Content-Type':'application/scim+json', 'Authorization': 'Bearer ' + scimToken},
-        body: JSON.stringify(content)
       }).then((response) => {
       if(response.ok){
         response.json().then((data:IScimUserResponse) =>{

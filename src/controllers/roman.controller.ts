@@ -5,7 +5,7 @@ import * as Messagerepo from '../repositories/message.repo';
 
 import * as Utils from '../utils/wirebackend.utils';
 
-import { User } from '../models/user';
+import { User,Channel, ChannelToUser } from '../models';
 
 import { IConversationInit, IScimUserResponse } from '../interfaces/interfaces';
  
@@ -81,22 +81,6 @@ export default class RomanController {
     }
   }
 
-  /*
-    cases:
-
-    user is admin 
-      --> implement actions for keywords
-        - Keywords
-          - /broadcast <Message> - broadcast message to roman
-          - /help - return messages to user with commands
-          - /stats - return sending stats of last broadcast (RC2 /stats broadcastID)
-    user is member
-      --> implement keywords
-        - /help - returns message to user with commands 
-        - /info - return infos concerning bot    
-   */   
-
-
   // toDo implement admin receives message from channel member
   private async handleText(isAdmin: boolean, body: any, appKey: string){
     const {text, userId , messageId} = body;
@@ -146,30 +130,45 @@ export default class RomanController {
     } 
   }
 
-  private async handleAssetPreview(){};
+  private async handleAssetPreview(){
+
+  };
 
   private async handleInit(isAdmin: boolean, body): Promise<IMessage> {
-    let userInfo = await Utils.getUserRichInfosById(body.userId)
-    /* let newUser:User = {
-      email: userInfo.email,
+    /* let userInfo:IScimUserResponse = await Utils.getUserRichInfosById(body.userId);
+    let user:User = {
       displayName: userInfo.displayName,
+      email: userInfo.externalId,
+      userId: userInfo.id,
       createdAt: (new Date),
-      updatedAt: (new Date),
-      userId: body.userId,
-
+      updatedAt: (new Date)
     }
+    let channel = await Channelrepo.getChannelByBotId(body.botId);
+    let existUser = await Userrepo.getUserByWireId(body.userId);
+    if(!existUser){
+      Userrepo.createUser(user);
+    }
+    let channeToUser:ChannelToUser = {
+      conversationId: body.conversationId,
+      isAdmin: isAdmin,
+      isApproved: true,
+      isMuted: false,
+      user: existUser,
+      channel: channel
+    }
+    console.log(userInfo);
     */
+
     const helpMessageUser = "Sie haben den Dev-Channel der Fraktion abonniert.\n\n" +
                             "/help - zeigt die Liste der Kommandos\n " +
                             "/info - zeigt Informationen über den Kanal\n" ;
-    const helpMessageAdmin = "Sie haben den Dev-Bot der Fraktion abonniert. Sie sind Broadcaster.\n\n" +
+    const helpMessageAdmin = "Sie haben den Dev-Channel der Fraktion abonniert. Sie sind Broadcaster.\n\n" +
                              "/help - zeigt die Liste der Kommandos\n " +
                              "/broadcast <Nachricht> - erzeugt eine Broadcast Nachricht\n" +
                              "/last - zeigt die Statistik des letzten Broadcast an \n" +
                              "/stats <ID> - erzeugt eine Broadcast Nachricht\n" +
                              "/info - zeigt Informationen über den Kanal\n" ;
     if(isAdmin){
-      
       return ({type: 'text', text: {data: helpMessageAdmin}})  
     }else{
       return ({type: 'text', text: {data: helpMessageUser}})  

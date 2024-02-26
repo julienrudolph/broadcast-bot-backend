@@ -22,3 +22,10 @@ import { Channel } from '../models/channel';
     if (!user) return null;
     return user;
   };
+
+  export const getChannelByBotId = async (id: string): Promise<Channel | null> => {
+    const channelRepository = connectDB.getRepository(Channel);
+    const user = await channelRepository.findOne({where: {botId: id}});
+    if (!user) return null;
+    return user;
+  };
