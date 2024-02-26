@@ -10,7 +10,9 @@ export interface IConversationInit{
 } 
 
 export interface IScimUserResponse {
-  email: string;
-  userId: string;
-  displayName: string
+  active: boolean;
+  displayName: string;
+  externalId: string;
+  id: string;
+  preferedLanguage: string;
 }
