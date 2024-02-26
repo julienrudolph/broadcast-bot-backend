@@ -7,7 +7,7 @@ import * as Utils from '../utils/wirebackend.utils';
 
 import { User,Channel, ChannelToUser } from '../models';
 
-import { IConversationInit, IScimUserResponse } from '../interfaces/interfaces';
+import { IConversationInit, IScimUserResponse, IAttachmentMessage } from '../interfaces/interfaces';
  
 interface HandlerDto {
   body: any
@@ -79,6 +79,17 @@ export default class RomanController {
     if(type === "conversation.asset.preview"){
       return this.handleAssetPreview();
     }
+    if(type === "conversation.asset.data"){
+      return this.handleAssetData(isAdmin, body, appKey);
+    }
+  }
+
+  private async handleAssetData(isAdmin: boolean, body, appKey: string){
+    if(isAdmin){
+      return this.broadCastAsset(appKey, body.userId, body.messageId, body );
+    }else{
+      return ({type: 'text', text: {data: "Im Broadcast sind keine Antworten möglich. Bei Fragen finden Sie hier https://www.cducsu.btg weitere Informationen."}}) 
+    }
   }
 
   // toDo implement admin receives message from channel member
@@ -88,7 +99,7 @@ export default class RomanController {
     if(isAdmin){
         if(messageText.startsWith("/help")){
           console.log("/help");
-          return ({type: 'text', text: {data : "/help - zeigt die Liste der Kommandos\n " +
+          return ({type: 'text', text: {data : "/help - zeigt die Liste der Kommandos an\n " +
                                                 "/broadcast <Nachricht> - erzeugt eine Broadcast Nachricht\n" +
                                                 "/last - zeigt die Statistik des letzten Broadcast an \n" +
                                                 "/stats <ID> - erzeugt eine Broadcast Nachricht\n" +
@@ -135,13 +146,14 @@ export default class RomanController {
   };
 
   private async handleInit(isAdmin: boolean, body): Promise<IMessage> {
-    /* let userInfo:IScimUserResponse = await Utils.getUserRichInfosById(body.userId);
+    let userInfo:IScimUserResponse = await Utils.getUserRichInfosById(body.userId);
     let user:User = {
       displayName: userInfo.displayName,
       email: userInfo.externalId,
       userId: userInfo.id,
       createdAt: (new Date),
-      updatedAt: (new Date)
+      updatedAt: (new Date),
+      userToken: body.token
     }
     let channel = await Channelrepo.getChannelByBotId(body.botId);
     let existUser = await Userrepo.getUserByWireId(body.userId);
@@ -157,8 +169,6 @@ export default class RomanController {
       channel: channel
     }
     console.log(userInfo);
-    */
-
     const helpMessageUser = "Sie haben den Dev-Channel der Fraktion abonniert.\n\n" +
                             "/help - zeigt die Liste der Kommandos\n " +
                             "/info - zeigt Informationen über den Kanal\n" ;
@@ -203,6 +213,42 @@ export default class RomanController {
     }catch(e){
       console.log(e);
     }
+  }
+
+  private async broadCastAsset(appKey: string, userId: string, messageId: string, body){
+    try {
+      let input:IAttachmentMessage = body;
+      console.log("Body");
+      console.log(input);
+      let broadCastMessage = ({type: 'attachment', attachment: {
+        "mimeType": input.attachment.mimeType,
+        size: body.size,
+        "meta": {
+          "assetId": input.attachment.meta.assetId,
+          "sha265": body.attachment.meta.sha256,
+          "otrKey": body.attachment.meta.otrKey
+        }
+      }});
+      const broadCastId = await this.broadCastAssetToWire(broadCastMessage, appKey, input.attachment.mimeType); 
+    }catch(e){
+      console.log(e);
+    }
+  }
+
+  private async broadCastAssetToWire(message, appKey: string, type: string){
+    const romanBroadcastUri = romanBase + "api/broadcast";
+    let broadCastResult = await fetch(
+      romanBroadcastUri,
+      {
+        method: 'POST',
+        headers: {'app-key': appKey, 'Accept': type, 'Content-Type': type},
+        body: JSON.stringify(message)
+      }    
+    ).then(res => {
+
+      console.log(res);
+    });
+    return "";
   }
 
   private async broadCastToWire(message: IMessage, appKey: string){
