@@ -6,7 +6,13 @@ import { Channel } from "./channel"
 export class ChannelToUser {
     @PrimaryGeneratedColumn('increment')
     public channelToUserID?: number;
-    
+
+    @Column()
+    public userId: number
+
+    @Column()
+    public channelId: number  
+
     @Column()
     public isAdmin!: boolean;
 
@@ -18,6 +24,9 @@ export class ChannelToUser {
 
     @Column()
     public conversationId!: string;
+
+    @Column({nullable: true})
+    public userToken?: string;
 
     @ManyToOne(() => User, (user) => user.channelToUser)
     public user!: User

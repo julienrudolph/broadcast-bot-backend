@@ -152,22 +152,26 @@ export default class RomanController {
       email: userInfo.externalId,
       userId: userInfo.id,
       createdAt: (new Date),
-      updatedAt: (new Date),
-      userToken: body.token
+      updatedAt: (new Date)
     }
     let channel = await Channelrepo.getChannelByBotId(body.botId);
     let existUser = await Userrepo.getUserByWireId(body.userId);
     if(!existUser){
-      Userrepo.createUser(user);
+      existUser = await Userrepo.createUser(user);
     }
     let channeToUser:ChannelToUser = {
+      userId: existUser.id,
+      channelId: channel.id,
       conversationId: body.conversationId,
       isAdmin: isAdmin,
       isApproved: true,
       isMuted: false,
       user: existUser,
-      channel: channel
+      channel: channel,
+      userToken: body.token
     }
+
+
     console.log(userInfo);
     const helpMessageUser = "Sie haben den Dev-Channel der Fraktion abonniert.\n\n" +
                             "/help - zeigt die Liste der Kommandos\n " +

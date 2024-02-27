@@ -24,9 +24,6 @@ import { ChannelToUser } from "./channelToUser";
     userId!: string;
 
     @Column({nullable: true})
-    userToken?: string;
-
-    @Column({nullable: true})
     preKey?: string;
 
     @CreateDateColumn()
