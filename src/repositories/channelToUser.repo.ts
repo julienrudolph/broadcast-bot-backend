@@ -23,9 +23,15 @@ import { ChannelToUser, User } from '../models';
     return user;
   };
 
+<<<<<<< HEAD
   export const getChannelToUserByWireUserId = async (id: string): Promise<ChannelToUser | null> => {
     const channelToUserRepo = connectDB.getRepository(ChannelToUser);
     const user = await channelToUserRepo.findOne({where: {user.userId: id}});
+=======
+  export const getChannelToUserByWireUserId = async (id: number): Promise<ChannelToUser | null> => {
+    const channelToUserRepo = connectDB.getRepository(ChannelToUser);
+    const user = await channelToUserRepo.findOne({where: {userId: id}});
+>>>>>>> 6d05038 (init - database)
     if (!user) return null;
     return user;
   };

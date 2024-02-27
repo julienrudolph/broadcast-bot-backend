@@ -1,9 +1,13 @@
 import { Get, Route, Tags, Post, Body, Path, Header } from "tsoa";
 import * as Userrepo from '../repositories/user.repo';
 import * as Channelrepo from '../repositories/channel.repo';
+import * as ChannelToUserRepo from '../repositories/channelToUser.repo';
 import * as Messagerepo from '../repositories/message.repo';
 
 import * as Utils from '../utils/wirebackend.utils';
+
+import * as fs from 'fs';
+import * as path from 'path';
 
 import { User,Channel, ChannelToUser } from '../models';
 
@@ -29,6 +33,7 @@ let romanBase = 'https://proxy.services.wire.com/';
 let admins = "55150f06-c2a4-4c29-b99d-b08afe608172";
 let appKey = "eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3dpcmUuY29tIiwic3ViIjoiZDBjZmY5YzctMGIwOS00NjM4LWFiYjUtODFlZDA0ODc1NmIwIn0.qWevLrDlJA_tf46Vw5FC7wzwP93RmqlHRNY62sCRGV8";
 let bearer = "Bearer km7a5l5VEIAXD-N_61_Xo-wh";
+let filePath = "./tmp"
 
 @Route("roman")
 @Tags("Roman")
@@ -62,6 +67,7 @@ export default class RomanController {
       return this.handleText(isAdmin, body, appKey);
     }
     if(type === "conversation.bot_request"){
+      return this.handleBotRequest(isAdmin, body);
       /* 
         toDo implement strategy with handle
         {
@@ -85,6 +91,40 @@ export default class RomanController {
   }
 
   private async handleAssetData(isAdmin: boolean, body, appKey: string, tempUserToken: string){
+
+  /*{
+    "type": "conversation.bot_request",
+    "botId": "493ede3e-3b8c-4093-b850-3c2be8a87a95",  // Unique identifier for this bot
+    "userId": "4dfc5c70-dcc8-4d9e-82be-a3cbe6661107", // User who requested this bot  
+    "conversationId": "5dfc5c70-dcc8-4d9e-82be-a3cbe6661106",  // ConversationId 
+    "conversation": "Bot Example Conversation",                // Conversation name
+    "handle": "dejan_wire",  // username of the user who requested this bot
+    "locale": "en_US",       // locale of the user who requested this bot    
+    "token": "..."           // Access token. Store this token so the bot can post back later
+}*/
+
+  private async handleBotRequest(isAdmin: boolean, body){
+    /*
+    determine if bot request needs to be saved ... most values can be obtained from init 
+    if(isAdmin){
+      let channel:Channel = await Channelrepo.getChannelByBotId(body.botId)
+      let user:User = await Userrepo.getUserByWireId(body.userId);
+      let channelToUser:ChannelToUser = {
+        channelId: channel.id,
+        isAdmin: isAdmin,
+        userId: body.userId,
+        user: user,
+        conversationId: body.conversationId,
+        channel: channel
+      }
+      let response = await ChannelToUserRepo.createChannelToUser(channelToUser);
+    }else{
+
+    }
+    */
+  }
+
+  private async handleAssetData(isAdmin: boolean, body, appKey: string){
     if(isAdmin){
       return this.broadCastAsset(appKey, body.userId, body.messageId, body, tempUserToken );
     }else{
@@ -136,7 +176,8 @@ export default class RomanController {
         return ({type: 'text', text: {data: "Dev-Channel der Fraktion. Sie sind Administrator"}})
       }
       else{
-        return ({type: 'text', text: {data: "Haben Sie eine Kommando vergessen? Diese Nachricht wurde nicht versand und wird nicht protokolliert."}})
+        // handling non admin messages - this.handleUserMessage(messageText, appKey, body)
+        return ({type: 'text', text: {data: "Diese Nachricht wird nicht weitergeleitet und nicht protokolliert."}})
       }
     } 
   }
@@ -171,6 +212,7 @@ export default class RomanController {
       userToken: body.token
     }
 
+    let channelAdd = await ChannelToUserRepo.createChannelToUser(channeToUser);
 
     console.log(userInfo);
     const helpMessageUser = "Sie haben den Dev-Channel der Fraktion abonniert.\n\n" +
@@ -189,7 +231,7 @@ export default class RomanController {
     }
   }
 
-  private async handleUserMessage(message: string, appKey: string, userId: string, messageId: string){
+  private async handleUserMessage(message: string, appKey: string, body){
     const romanMessageUri = romanBase + "api/message";
     let recipients = admins.split(","); 
     recipients.forEach(element => {
