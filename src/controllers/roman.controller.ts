@@ -9,6 +9,7 @@ import * as Utils from '../utils/wirebackend.utils';
 import { BotUser, Channel, ChannelToUser } from '../models';
 
 import { IConversationInit, IScimUserResponse, IAttachmentMessage } from '../interfaces/interfaces';
+import connectDB from "../config/database";
  
 interface HandlerDto {
   body: any
@@ -57,6 +58,7 @@ export default class RomanController {
   private async determmineHandler(isAdmin, body, appKey, tempUserToken:string ){
     const { type } = body;
     // ToDo find better switch case
+
     if(type === "conversation.init"){
       return this.handleInit(isAdmin, body);
     }
@@ -65,19 +67,6 @@ export default class RomanController {
     }
     if(type === "conversation.bot_request"){
       return this.handleBotRequest(isAdmin, body);
-      /* 
-        toDo implement strategy with handle
-        {
-          "type": "conversation.bot_request",
-          "botId": "493ede3e-3b8c-4093-b850-3c2be8a87a95",  // Unique identifier for this bot
-          "userId": "4dfc5c70-dcc8-4d9e-82be-a3cbe6661107", // User who requested this bot  
-          "conversationId": "5dfc5c70-dcc8-4d9e-82be-a3cbe6661106",  // ConversationId 
-          "conversation": "Bot Example Conversation",                // Conversation name
-          "handle": "dejan_wire",  // username of the user who requested this bot
-          "locale": "en_US",       // locale of the user who requested this bot    
-          "token": "..."           // Access token. Store this token so the bot can post back later
-        }
-        */ 
     }
     if(type === "conversation.asset.preview"){
       return this.handleAssetPreview();
@@ -88,24 +77,43 @@ export default class RomanController {
   }
 
   private async handleBotRequest(isAdmin: boolean, body){
-    /*
-    determine if bot request needs to be saved ... most values can be obtained from init 
-    if(isAdmin){
-      let channel:Channel = await Channelrepo.getChannelByBotId(body.botId)
-      let user:User = await Userrepo.getUserByWireId(body.userId);
-      let channelToUser:ChannelToUser = {
-        channelId: channel.id,
-        isAdmin: isAdmin,
-        userId: body.userId,
-        user: user,
-        conversationId: body.conversationId,
-        channel: channel
-      }
-      let response = await ChannelToUserRepo.createChannelToUser(channelToUser);
-    }else{
-
+    let userInfo:IScimUserResponse = await Utils.getUserRichInfosById(body.userId);
+    let user:BotUser = {
+      displayName: userInfo.displayName,
+      email: userInfo.externalId,
+      userId: userInfo.id,
+      createdAt: (new Date),
+      updatedAt: (new Date)
     }
-    */
+    let channel = await Channelrepo.getChannelByBotId(body.botId);
+    console.log("Channel");
+    console.log(channel);
+    if(!channel){
+      let newChannel:Channel = {
+        botId: body.botId,
+        name: "Dev-Channel",
+      }
+      await Channelrepo.createChannel(newChannel).then(async () => {
+        channel = await Channelrepo.getChannelByBotId(body.botId);
+      });
+    }
+    let existUser = await Userrepo.getUserByWireId(body.userId);
+    if(!existUser){
+      existUser = await Userrepo.createUser(user);
+    }
+    let channelToUser:ChannelToUser = {
+      userId: existUser.id,
+      channelId: channel.id,
+      conversationId: body.conversationId,
+      isAdmin: isAdmin,
+      isApproved: true,
+      isMuted: false,
+      user: existUser,
+      channel: channel,
+      userToken: body.token
+    }
+    let channelAdd = await ChannelToUserRepo.createChannelToUser(channelToUser);
+    console.log(userInfo);
   }
 
   private async handleAssetData(isAdmin: boolean, body, appKey: string, tempUserToken: string){
@@ -157,10 +165,11 @@ export default class RomanController {
                 });        
       }
       else if(messageText.startsWith("/info")){
-        return ({type: 'text', text: {data: "Dev-Channel der Fraktion. Sie sind Administrator"}})
+        return ({type: 'text', text: {data: "Dev-Channel der Fraktion."}})
       }
       else{
         // handling non admin messages - this.handleUserMessage(messageText, appKey, body)
+        console.log(body);
         return ({type: 'text', text: {data: "Diese Nachricht wird nicht weitergeleitet und nicht protokolliert."}})
       }
     } 
@@ -171,7 +180,7 @@ export default class RomanController {
   };
 
   private async handleInit(isAdmin: boolean, body): Promise<IMessage> {
-    let userInfo:IScimUserResponse = await Utils.getUserRichInfosById(body.userId);
+    /*let userInfo:IScimUserResponse = await Utils.getUserRichInfosById(body.userId);
     let user:BotUser = {
       displayName: userInfo.displayName,
       email: userInfo.externalId,
@@ -210,6 +219,7 @@ export default class RomanController {
     let channelAdd = await ChannelToUserRepo.createChannelToUser(channelToUser);
 
     console.log(userInfo);
+    */
     const helpMessageUser = "Sie haben den Dev-Channel der Fraktion abonniert.\n\n" +
                             "/help - zeigt die Liste der Kommandos\n " +
                             "/info - zeigt Informationen über den Kanal\n" ;
@@ -258,45 +268,32 @@ export default class RomanController {
 
   private async broadCastAsset(appKey: string, userId: string, messageId: string, body, tempUserToken:string){
     try {
-
-      /* 
-      {
-    "type": "attachment",
-    "attachment": {
-        "mimeType" : "image/jpeg",
-        "height" : 320,
-        "width" : 160,
-        "size" : 2048,
-        "meta" : {
-           "assetId" : "3-cef231a2-23f2-429e-b76a-b7649594d3fe",
-           "assetToken" : "...", // Optional
-           "sha256" : "...", // Base64 encoded SHA256 digest of the file
-           "otrKey" : "..." // Base64 encoded otr key used to encrypt the file
-        }
-    } 
-}  */ 
-      console.log(body);
       let input:IAttachmentMessage = body;
-      // console.log("Body");
-      // console.log(input);
-      let broadCastMessage = ({
-        "botId": input.botId,
-        "userId": input.userId,
-        "type": "attachment",
-        "conversationId": input.conversationId,
-        "attachment": {
-          "mimeType": "image/jpeg",
-          "height": input.attachment.height,
-          "width": input.attachment.width,
-          "size": input.attachment.size,
-          "meta": {
-            "assetId": input.attachment.meta.assetId,
-            "sha256": body.attachment.meta.sha256,
-            "otrKey": body.attachment.meta.otrKey  
+      let users:ChannelToUser[] = await ChannelToUserRepo.getAllChannelToUsers();
+      // console.log(users);
+      users.forEach(async elem => {
+        let channelInfo: Channel = await Channelrepo.getChannelById(elem.channelId);
+        let userInfo: BotUser = await Userrepo.getUserById(elem.userId);
+        let broadCastMessage = ({
+          "botId": channelInfo.botId,
+          "userId": userInfo.userId,
+          "type": "attachment",
+          "conversationId": elem.conversationId,
+          "attachment": {
+            "mimeType": "image/jpeg",
+            "height": input.attachment.height,
+            "width": input.attachment.width,
+            "size": input.attachment.size,
+            "meta": {
+              "assetId": input.attachment.meta.assetId,
+              "sha256": body.attachment.meta.sha256,
+              "otrKey": body.attachment.meta.otrKey  
+            }
           }
-        }
+        });
+        await this.broadCastAssetToWire(broadCastMessage, appKey, input.attachment.mimeType, elem.userToken); 
       });
-      const broadCastId = await this.broadCastAssetToWire(broadCastMessage, appKey, input.attachment.mimeType, body.token); 
+      
     }catch(e){
       console.log(e);
     }
@@ -333,7 +330,7 @@ export default class RomanController {
       }    
     ).then(res => {
 
-      console.log(res);
+      // console.log(res);
     });
     return "";
   }

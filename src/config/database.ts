@@ -10,7 +10,9 @@ export const connectDB = new DataSource({
     database: process.env.POSTGRES_DB || "postgres",
     entities: [BotUser, Channel, ChannelToUser, Message],
     synchronize: true,
+    connectTimeoutMS: 0
 });
+
 
 /*const config: PostgresConnectionOptions = {
   type: "postgres",
@@ -22,5 +24,6 @@ export const connectDB = new DataSource({
   entities: [],
   synchronize: true,
 };*/
+
 
 export default connectDB;
