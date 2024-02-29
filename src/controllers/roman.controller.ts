@@ -39,20 +39,20 @@ export default class RomanController {
     const romanBroadcast = `${romanBase}api/broadcast`;
   
     // const { admins, appKey } = await getConfigurationForAuth(authorizationToken);
-    console.log(body);
-    console.log(header)
-
+    // console.log(body);
+    // console.log(header)
+    const tempUserToken:string = header.Authorization
     const { type, userId, messageId, conversationId } = body;
     if(header.authorization === bearer){
       if(admins.includes(userId)){
-        return await this.determmineHandler(true, body , appKey);
+        return await this.determmineHandler(true, body , appKey, tempUserToken);
       }else{
-        return await this.determmineHandler(false, body, appKey);
+        return await this.determmineHandler(false, body, appKey, tempUserToken);
       }        
     }
   }
 
-  private async determmineHandler(isAdmin, body, appKey){
+  private async determmineHandler(isAdmin, body, appKey, tempUserToken:string ){
     const { type } = body;
     // ToDo find better switch case
     if(type === "conversation.init"){
@@ -80,13 +80,13 @@ export default class RomanController {
       return this.handleAssetPreview();
     }
     if(type === "conversation.asset.data"){
-      return this.handleAssetData(isAdmin, body, appKey);
+      return this.handleAssetData(isAdmin, body, appKey, tempUserToken);
     }
   }
 
-  private async handleAssetData(isAdmin: boolean, body, appKey: string){
+  private async handleAssetData(isAdmin: boolean, body, appKey: string, tempUserToken: string){
     if(isAdmin){
-      return this.broadCastAsset(appKey, body.userId, body.messageId, body );
+      return this.broadCastAsset(appKey, body.userId, body.messageId, body, tempUserToken );
     }else{
       return ({type: 'text', text: {data: "Im Broadcast sind keine Antworten möglich. Bei Fragen finden Sie hier https://www.cducsu.btg weitere Informationen."}}) 
     }
@@ -219,39 +219,69 @@ export default class RomanController {
     }
   }
 
-  private async broadCastAsset(appKey: string, userId: string, messageId: string, body){
+  private async broadCastAsset(appKey: string, userId: string, messageId: string, body, tempUserToken:string){
     try {
-      let input:IAttachmentMessage = body;
-      console.log("Body");
-      console.log(input);
-      let broadCastMessage = ({type: 'attachment', attachment: {
-        "mimeType": input.attachment.mimeType,
-        size: body.size,
-        "meta": {
-          "assetId": input.attachment.meta.assetId,
-          "sha265": body.attachment.meta.sha256,
-          "otrKey": body.attachment.meta.otrKey
+
+      /* 
+      {
+    "type": "attachment",
+    "attachment": {
+        "mimeType" : "image/jpeg",
+        "height" : 320,
+        "width" : 160,
+        "size" : 2048,
+        "meta" : {
+           "assetId" : "3-cef231a2-23f2-429e-b76a-b7649594d3fe",
+           "assetToken" : "...", // Optional
+           "sha256" : "...", // Base64 encoded SHA256 digest of the file
+           "otrKey" : "..." // Base64 encoded otr key used to encrypt the file
         }
-      }});
-      const broadCastId = await this.broadCastAssetToWire(broadCastMessage, appKey, input.attachment.mimeType); 
+    } 
+}  */ 
+      console.log(body);
+      let input:IAttachmentMessage = body;
+      // console.log("Body");
+      // console.log(input);
+      let broadCastMessage = ({
+        "botId": input.botId,
+        "userId": input.userId,
+        "type": "attachment",
+        "conversationId": input.conversationId,
+        "attachment": {
+          "mimeType": "image/jpeg",
+          "height": input.attachment.height,
+          "width": input.attachment.width,
+          "size": input.attachment.size,
+          "meta": {
+            "assetId": input.attachment.meta.assetId,
+            "sha256": body.attachment.meta.sha256,
+            "otrKey": body.attachment.meta.otrKey  
+          }
+        }
+      });
+      const broadCastId = await this.broadCastAssetToWire(broadCastMessage, appKey, input.attachment.mimeType, body.token); 
     }catch(e){
       console.log(e);
     }
   }
 
-  private async broadCastAssetToWire(message, appKey: string, type: string){
-    const romanBroadcastUri = romanBase + "api/broadcast";
+  private async broadCastAssetToWire(message, appKey: string, type: string, tempUserToken: string){
+    const romanBroadcastUri = romanBase + "api/conversation";
+    let authToken = "Bearer " + tempUserToken;
+    console.log("token: " + authToken);
+    console.log( message);
     let broadCastResult = await fetch(
       romanBroadcastUri,
       {
         method: 'POST',
-        headers: {'app-key': appKey, 'Accept': type, 'Content-Type': type},
+        headers: {'Authorization': authToken, 'Accept': 'application/json', 'Content-Type':'application/json'},
         body: JSON.stringify(message)
       }    
     ).then(res => {
-
+      console.log("Response Roman");
       console.log(res);
     });
+    console.log(broadCastResult);
     return "";
   }
 
