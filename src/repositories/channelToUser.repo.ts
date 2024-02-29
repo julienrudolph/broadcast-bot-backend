@@ -7,6 +7,11 @@ import { ChannelToUser, BotUser } from '../models';
     return channelToUserRepo.find();
   };
   
+  export const getAllAdminsForChannel = async (): Promise<Array<ChannelToUser>> => {
+    const channelToUserRepo = connectDB.getRepository(ChannelToUser);
+    return channelToUserRepo.find({where: {isAdmin: true}})
+  }
+
   export const createChannelToUser = async (payload: ChannelToUser): Promise<ChannelToUser> => {
     const channelToUserRepo = connectDB.getRepository(ChannelToUser);
     const user = new ChannelToUser();

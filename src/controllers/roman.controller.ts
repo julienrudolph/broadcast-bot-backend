@@ -168,9 +168,10 @@ export default class RomanController {
         return ({type: 'text', text: {data: "Dev-Channel der Fraktion."}})
       }
       else{
-        // handling non admin messages - this.handleUserMessage(messageText, appKey, body)
         console.log(body);
-        return ({type: 'text', text: {data: "Diese Nachricht wird nicht weitergeleitet und nicht protokolliert."}})
+        this.handleUserMessage(body);
+        
+        // return ({type: 'text', text: {data: "Diese Nachricht wird nicht weitergeleitet und nicht protokolliert."}})
       }
     } 
   }
@@ -236,18 +237,24 @@ export default class RomanController {
     }
   }
 
-  private async handleUserMessage(message: string, appKey: string, body){
-    const romanMessageUri = romanBase + "api/message";
-    let recipients = admins.split(","); 
-    recipients.forEach(element => {
+  private async handleUserMessage(body){
+    const romanMessageUri = romanBase + "api/conversation";
+    // get all admins from user table and send message to each admin if neccessary
+    let channelAdmins:ChannelToUser[] = await ChannelToUserRepo.getAllAdminsForChannel();
+    channelAdmins.forEach(async element => {
+      let userInfo = await Userrepo.getUserById(element.userId); 
       try{
-        let userMessage = ({
-          type: 'text', 
-          text: {data: message}
-        })
+        let auth:string = "Bearer " + element.userToken; 
+        let message = {
+          "type" : "text",
+          "text" : {
+            "data": body.text.data
+          }
+        }
         fetch(
           romanMessageUri, {
-            headers: {'app-key': appKey, 'Accept': 'application/json', 'Content-Type': 'application/json'},
+            method: "POST",
+            headers: {'Authorization': auth, 'Accept': 'application/json', 'Content-Type':'application/json'},
             body: JSON.stringify(message) 
           }
         )
@@ -272,11 +279,9 @@ export default class RomanController {
       let users:ChannelToUser[] = await ChannelToUserRepo.getAllChannelToUsers();
       // console.log(users);
       users.forEach(async elem => {
-        let channelInfo: Channel = await Channelrepo.getChannelById(elem.channelId);
-        let userInfo: BotUser = await Userrepo.getUserById(elem.userId);
         let broadCastMessage = ({
-          "botId": channelInfo.botId,
-          "userId": userInfo.userId,
+          // "botId": channelInfo.botId,
+          // "userId": userInfo.userId,
           "type": "attachment",
           "conversationId": elem.conversationId,
           "attachment": {
