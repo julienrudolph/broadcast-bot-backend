@@ -6,9 +6,6 @@ import * as Messagerepo from '../repositories/message.repo';
 
 import * as Utils from '../utils/wirebackend.utils';
 
-import * as fs from 'fs';
-import * as path from 'path';
-
 import { User,Channel, ChannelToUser } from '../models';
 
 import { IConversationInit, IScimUserResponse, IAttachmentMessage } from '../interfaces/interfaces';
@@ -90,19 +87,6 @@ export default class RomanController {
     }
   }
 
-  private async handleAssetData(isAdmin: boolean, body, appKey: string, tempUserToken: string){
-
-  /*{
-    "type": "conversation.bot_request",
-    "botId": "493ede3e-3b8c-4093-b850-3c2be8a87a95",  // Unique identifier for this bot
-    "userId": "4dfc5c70-dcc8-4d9e-82be-a3cbe6661107", // User who requested this bot  
-    "conversationId": "5dfc5c70-dcc8-4d9e-82be-a3cbe6661106",  // ConversationId 
-    "conversation": "Bot Example Conversation",                // Conversation name
-    "handle": "dejan_wire",  // username of the user who requested this bot
-    "locale": "en_US",       // locale of the user who requested this bot    
-    "token": "..."           // Access token. Store this token so the bot can post back later
-}*/
-
   private async handleBotRequest(isAdmin: boolean, body){
     /*
     determine if bot request needs to be saved ... most values can be obtained from init 
@@ -124,7 +108,7 @@ export default class RomanController {
     */
   }
 
-  private async handleAssetData(isAdmin: boolean, body, appKey: string){
+  private async handleAssetData(isAdmin: boolean, body, appKey: string, tempUserToken: string){
     if(isAdmin){
       return this.broadCastAsset(appKey, body.userId, body.messageId, body, tempUserToken );
     }else{

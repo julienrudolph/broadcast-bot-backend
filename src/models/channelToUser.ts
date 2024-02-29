@@ -5,11 +5,7 @@ import { Channel } from "./channel"
 @Entity()
 export class ChannelToUser {
     @PrimaryGeneratedColumn('increment')
-<<<<<<< HEAD
-    public channelToUserID?: number;
-=======
     public id?: number;
->>>>>>> 6d05038 (init - database)
 
     @Column()
     public userId: number
