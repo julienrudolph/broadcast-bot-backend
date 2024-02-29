@@ -183,11 +183,11 @@ export default class RomanController {
     console.log("Channel");
     console.log(channel);
     if(!channel){
-      let channel:Channel = {
+      let newChannel:Channel = {
         botId: body.botId,
         name: "Dev-Channel",
       }
-      await Channelrepo.createChannel(channel).then(async () => {
+      await Channelrepo.createChannel(newChannel).then(async () => {
         channel = await Channelrepo.getChannelByBotId(body.botId);
       });
     }
@@ -195,7 +195,7 @@ export default class RomanController {
     if(!existUser){
       existUser = await Userrepo.createUser(user);
     }
-    let channeToUser:ChannelToUser = {
+    let channelToUser:ChannelToUser = {
       userId: existUser.id,
       channelId: channel.id,
       conversationId: body.conversationId,
@@ -207,7 +207,7 @@ export default class RomanController {
       userToken: body.token
     }
 
-    let channelAdd = await ChannelToUserRepo.createChannelToUser(channeToUser);
+    let channelAdd = await ChannelToUserRepo.createChannelToUser(channelToUser);
 
     console.log(userInfo);
     const helpMessageUser = "Sie haben den Dev-Channel der Fraktion abonniert.\n\n" +
