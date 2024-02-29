@@ -9,23 +9,23 @@ import { Channel } from '../models/channel';
   
   export const createChannel = async (payload: Channel): Promise<Channel> => {
     const channelRepository = connectDB.getRepository(Channel);
-    const user = new Channel();
+    const channel = new Channel();
     return channelRepository.save({
-      ...user,
+      ...channel,
       ...payload,
     });
   };
   
   export const getChannelById = async (id: number): Promise<Channel | null> => {
     const channelRepository = connectDB.getRepository(Channel);
-    const user = await channelRepository.findOne({where: {id: id}});
-    if (!user) return null;
-    return user;
+    const channel = await channelRepository.findOne({where: {id: id}});
+    if (!channel) return null;
+    return channel;
   };
 
   export const getChannelByBotId = async (id: string): Promise<Channel | null> => {
     const channelRepository = connectDB.getRepository(Channel);
-    const user = await channelRepository.findOne({where: {botId: id}});
-    if (!user) return null;
-    return user;
+    const channel = await channelRepository.findOne({where: {botId: id}});
+    if (!channel) return null;
+    return channel;
   };

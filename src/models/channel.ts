@@ -16,16 +16,13 @@ import {
     botId!: string;
 
     @Column()
-    secToken!: string;
-
-    @Column()
     name!: string;
 
     @CreateDateColumn()
-    createdAt!: Date;
+    createdAt?: Date;
   
     @UpdateDateColumn()
-    updatedAt!: Date;   
+    updatedAt?: Date;   
 
     @OneToMany(() => ChannelToUser, channelToUser => channelToUser.channel)
     public channelToUser?: ChannelToUser[];

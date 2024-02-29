@@ -180,6 +180,17 @@ export default class RomanController {
       updatedAt: (new Date)
     }
     let channel = await Channelrepo.getChannelByBotId(body.botId);
+    console.log("Channel");
+    console.log(channel);
+    if(!channel){
+      let channel:Channel = {
+        botId: body.botId,
+        name: "Dev-Channel",
+      }
+      await Channelrepo.createChannel(channel).then(async () => {
+        channel = await Channelrepo.getChannelByBotId(body.botId);
+      });
+    }
     let existUser = await Userrepo.getUserByWireId(body.userId);
     if(!existUser){
       existUser = await Userrepo.createUser(user);

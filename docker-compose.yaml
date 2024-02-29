@@ -1,14 +1,16 @@
 version: "3"
 services:
-  #pgadmin:
+  pgadmin:
   #  image: dpage/pgadmin4
   #  container_name: pgadmin4_container
   #  restart: always
   #  ports:
-  #    - "8888:80"
+  #    - "8123:80"
   #  environment:
-  #    PGADMIN_DEFAULT_EMAIL: admin@local.com
-  #    PGADMIN_DEFAULT_PASSWORD: postgres
+  #    - PGADMIN_DEFAULT_EMAIL=admin@local.com
+  #    - PGADMIN_DEFAULT_PASSWORD=postgres
+  #  networks:
+  #    - broadcast-bot
   db:
     image: postgres:latest
     networks:
