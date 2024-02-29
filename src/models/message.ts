@@ -7,7 +7,7 @@ import {
     OneToOne,
     JoinColumn
   } from "typeorm";
-import { User } from "./user"; 
+import { BotUser } from "./botUser"; 
 import { Channel } from "./channel";
 
   @Entity()
@@ -30,9 +30,9 @@ import { Channel } from "./channel";
     @UpdateDateColumn()
     updatedAt!: Date;   
 
-    @OneToOne(() => User)
+    @OneToOne(() => BotUser)
     @JoinColumn()
-    createdBy!: User
+    createdBy!: BotUser
   
     @OneToOne(() => Channel)
     @JoinColumn()

@@ -1,5 +1,5 @@
 import { connectDB } from '../config/database';
-import { ChannelToUser, User } from '../models';
+import { ChannelToUser, BotUser } from '../models';
 
 
   export const getAllChannelToUsers = async (): Promise<Array<ChannelToUser>> => {
@@ -29,3 +29,4 @@ import { ChannelToUser, User } from '../models';
     if (!user) return null;
     return user;
   };
+

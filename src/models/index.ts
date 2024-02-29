@@ -1,6 +1,6 @@
 import { Channel } from "./channel";
-import { User } from "./user";
+import { BotUser } from "./botUser";
 import { ChannelToUser } from "./channelToUser";
 import { Message } from "./message";
 
-export {Channel, User, ChannelToUser, Message};
+export {Channel, BotUser, ChannelToUser, Message};

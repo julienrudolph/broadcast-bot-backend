@@ -10,7 +10,7 @@ import { Channel } from "./channel";
 import { ChannelToUser } from "./channelToUser";
 
   @Entity()
-  export class User {
+  export class BotUser {
     @PrimaryGeneratedColumn('increment')
     id?: number;
   

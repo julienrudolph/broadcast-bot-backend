@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
-import { User } from "./user"
+import { BotUser } from "./botUser"
 import { Channel } from "./channel"
 
 @Entity()
@@ -28,8 +28,8 @@ export class ChannelToUser {
     @Column({nullable: true})
     public userToken?: string;
 
-    @ManyToOne(() => User, (user) => user.channelToUser)
-    public user!: User
+    @ManyToOne(() => BotUser, (user) => user.channelToUser)
+    public user!: BotUser
 
     @ManyToOne(() => Channel, (channel) => channel.channelToUser)
     public channel!: Channel

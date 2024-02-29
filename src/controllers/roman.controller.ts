@@ -6,7 +6,7 @@ import * as Messagerepo from '../repositories/message.repo';
 
 import * as Utils from '../utils/wirebackend.utils';
 
-import { User,Channel, ChannelToUser } from '../models';
+import { BotUser, Channel, ChannelToUser } from '../models';
 
 import { IConversationInit, IScimUserResponse, IAttachmentMessage } from '../interfaces/interfaces';
  
@@ -172,7 +172,7 @@ export default class RomanController {
 
   private async handleInit(isAdmin: boolean, body): Promise<IMessage> {
     let userInfo:IScimUserResponse = await Utils.getUserRichInfosById(body.userId);
-    let user:User = {
+    let user:BotUser = {
       displayName: userInfo.displayName,
       email: userInfo.externalId,
       userId: userInfo.id,
