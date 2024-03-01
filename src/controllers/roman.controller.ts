@@ -5,7 +5,7 @@ import * as ChannelToUserRepo from '../repositories/channelToUser.repo';
 import * as Messagerepo from '../repositories/message.repo';
 
 import * as Utils from '../utils/wirebackend.utils';
-
+import * as Logger from '../utils/logging.utils';
 import { BotUser, Channel, ChannelToUser } from '../models';
 
 import { IConversationInit, IScimUserResponse, IAttachmentMessage } from '../interfaces/interfaces';
@@ -38,6 +38,11 @@ let filePath = "./tmp"
 export default class RomanController {
   @Post("/")
   public async getRomanResponse(@Body() body: any, @Header() header: any ): Promise<any> {
+    console.log("ROMAN POST - " + new Date().toISOString );
+    console.log("HEADER");
+    console.log(header);
+    console.log("BODY")
+    console.log(body)
     romanBase = romanBase.endsWith('/') ? romanBase : `${romanBase}/`;
     const romanBroadcast = `${romanBase}api/broadcast`;
   
@@ -77,6 +82,7 @@ export default class RomanController {
   }
 
   private async handleBotRequest(isAdmin: boolean, body){
+    console.log("BOT REQUEST - " + new Date().toISOString);
     let userInfo:IScimUserResponse = await Utils.getUserRichInfosById(body.userId);
     let user:BotUser = {
       displayName: userInfo.displayName,
@@ -86,8 +92,6 @@ export default class RomanController {
       updatedAt: (new Date)
     }
     let channel = await Channelrepo.getChannelByBotId(body.botId);
-    console.log("Channel");
-    console.log(channel);
     if(!channel){
       let newChannel:Channel = {
         botId: body.botId,
@@ -113,10 +117,10 @@ export default class RomanController {
       userToken: body.token
     }
     let channelAdd = await ChannelToUserRepo.createChannelToUser(channelToUser);
-    console.log(userInfo);
   }
 
   private async handleAssetData(isAdmin: boolean, body, appKey: string, tempUserToken: string){
+    console.log("handleAssetData - " + new Date().toISOString);
     if(isAdmin){
       return this.broadCastAsset(appKey, body.userId, body.messageId, body, tempUserToken );
     }else{
@@ -126,11 +130,11 @@ export default class RomanController {
 
   // toDo implement admin receives message from channel member
   private async handleText(isAdmin: boolean, body: any, appKey: string){
+    console.log("handleText - " + new Date().toISOString);
     const {text, userId , messageId} = body;
     const messageText:string = text?.data ?? '';
     if(isAdmin){
         if(messageText.startsWith("/help")){
-          console.log("/help");
           return ({type: 'text', text: {data : "/help - zeigt die Liste der Kommandos an\n " +
                                                 "/broadcast <Nachricht> - erzeugt eine Broadcast Nachricht\n" +
                                                 "/last - zeigt die Statistik des letzten Broadcast an \n" +
@@ -144,10 +148,10 @@ export default class RomanController {
         }
         else if(messageText.startsWith("/stats")){
           let broadCastId = text.split(" ")[1];
-          return this.getBroadcastStat(broadCastId);
+          return this.getBroadcastStat(broadCastId, appKey);
         }
         else if(messageText.startsWith("/last")){
-          return this.getBroadcastStat();
+          return this.getBroadcastStat("broadCastI", appKey);
         }
         else if(messageText.startsWith("/broadcast")){
           const broadCast = messageText.substring(10);
@@ -158,7 +162,6 @@ export default class RomanController {
         }
     }else{
       if(messageText.startsWith("/help")){
-        console.log("/help");
         return ({type: 'text', text: {data : "/help - zeigt die Liste der Kommandos\n " +
                                               "/info - zeigt Informationen über den Kanal\n"   
                                       }
@@ -168,7 +171,6 @@ export default class RomanController {
         return ({type: 'text', text: {data: "Dev-Channel der Fraktion."}})
       }
       else{
-        console.log(body);
         this.handleUserMessage(body);
         
         // return ({type: 'text', text: {data: "Diese Nachricht wird nicht weitergeleitet und nicht protokolliert."}})
@@ -181,46 +183,7 @@ export default class RomanController {
   };
 
   private async handleInit(isAdmin: boolean, body): Promise<IMessage> {
-    /*let userInfo:IScimUserResponse = await Utils.getUserRichInfosById(body.userId);
-    let user:BotUser = {
-      displayName: userInfo.displayName,
-      email: userInfo.externalId,
-      userId: userInfo.id,
-      createdAt: (new Date),
-      updatedAt: (new Date)
-    }
-    let channel = await Channelrepo.getChannelByBotId(body.botId);
-    console.log("Channel");
-    console.log(channel);
-    if(!channel){
-      let newChannel:Channel = {
-        botId: body.botId,
-        name: "Dev-Channel",
-      }
-      await Channelrepo.createChannel(newChannel).then(async () => {
-        channel = await Channelrepo.getChannelByBotId(body.botId);
-      });
-    }
-    let existUser = await Userrepo.getUserByWireId(body.userId);
-    if(!existUser){
-      existUser = await Userrepo.createUser(user);
-    }
-    let channelToUser:ChannelToUser = {
-      userId: existUser.id,
-      channelId: channel.id,
-      conversationId: body.conversationId,
-      isAdmin: isAdmin,
-      isApproved: true,
-      isMuted: false,
-      user: existUser,
-      channel: channel,
-      userToken: body.token
-    }
-
-    let channelAdd = await ChannelToUserRepo.createChannelToUser(channelToUser);
-
-    console.log(userInfo);
-    */
+    console.log("handleInit - " + new Date().toISOString);
     const helpMessageUser = "Sie haben den Dev-Channel der Fraktion abonniert.\n\n" +
                             "/help - zeigt die Liste der Kommandos\n " +
                             "/info - zeigt Informationen über den Kanal\n" ;
@@ -238,8 +201,8 @@ export default class RomanController {
   }
 
   private async handleUserMessage(body){
+    console.log("handleUserMessage - " + new Date().toISOString);
     const romanMessageUri = romanBase + "api/conversation";
-    // get all admins from user table and send message to each admin if neccessary
     let channelAdmins:ChannelToUser[] = await ChannelToUserRepo.getAllAdminsForChannel();
     channelAdmins.forEach(async element => {
       let userInfo = await Userrepo.getUserById(element.userId); 
@@ -265,15 +228,18 @@ export default class RomanController {
   }
 
   private async broadCastMessage(message: string, appKey: string, userId: string, messageId: string){
+    console.log("broadCastMessage - " + new Date().toISOString);
     try {
       let broadCastMessage:IMessage = ({type: 'text', text: {data: message}})
       const broadCastId = await this.broadCastToWire(broadCastMessage, appKey); 
+      console.log(broadCastId);
     }catch(e){
       console.log(e);
     }
   }
 
   private async broadCastAsset(appKey: string, userId: string, messageId: string, body, tempUserToken:string){
+    console.log("broadCastAsset - " + new Date().toISOString);
     try {
       let input:IAttachmentMessage = body;
       let users:ChannelToUser[] = await ChannelToUserRepo.getAllChannelToUsers();
@@ -296,7 +262,9 @@ export default class RomanController {
             }
           }
         });
-        await this.broadCastAssetToWire(broadCastMessage, appKey, input.attachment.mimeType, elem.userToken); 
+        await this.broadCastAssetToWire(broadCastMessage, appKey, input.attachment.mimeType, elem.userToken).then(res => {
+
+        }); 
       });
       
     }catch(e){
@@ -305,10 +273,9 @@ export default class RomanController {
   }
 
   private async broadCastAssetToWire(message, appKey: string, type: string, tempUserToken: string){
+    console.log("AssetToWire - " + new Date().toISOString);
     const romanBroadcastUri = romanBase + "api/conversation";
     let authToken = "Bearer " + tempUserToken;
-    console.log("token: " + authToken);
-    console.log( message);
     let broadCastResult = await fetch(
       romanBroadcastUri,
       {
@@ -317,14 +284,14 @@ export default class RomanController {
         body: JSON.stringify(message)
       }    
     ).then(res => {
-      console.log("Response Roman");
-      console.log(res);
+
     });
     console.log(broadCastResult);
     return "";
   }
 
   private async broadCastToWire(message: IMessage, appKey: string){
+    console.log("broadCastTextToWire - " + new Date().toISOString);
     const romanBroadcastUri = romanBase + "api/broadcast";
     let broadCastResult = await fetch(
       romanBroadcastUri,
@@ -340,9 +307,21 @@ export default class RomanController {
     return "";
   }
 
-  private getBroadcastStat(id?: string){}
-
-  private getHelp(isAdmin: boolean){}
+  /* const getBroadcastStats = async (appKey: string, broadcastId: string | undefined = undefined) => {
+    logDebug(`Retrieving broadcast stats for broadcast ${broadcastId}.`, { broadcastId });
+    const url = broadcastId ? `${romanBroadcast}?id=${broadcastId}` : romanBroadcast;
+    const request = await fetch(url, { method: 'GET', headers: { 'app-key': appKey } }).then(receiveJsonOrLogError);
+    return convertStats(request);
+  };
+  
+  const convertStats = ({ report }: { report: { type: string, count: number }[] }) =>
+    report
+    .map(({ type, count }) => `${type}: ${count}`)
+    .join('\n');
+  */
+  private getBroadcastStat(broadCastId: string, appKey:string){
+    console.log("broadCastStatistics - " + new Date().toISOString);
+  }
 
   
 }

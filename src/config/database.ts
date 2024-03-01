@@ -1,5 +1,6 @@
 import { DataSource } from "typeorm";
 import {BotUser, Channel, ChannelToUser, Message} from "../models";
+import { BroadCast } from "../models/broadcast";
 
 export const connectDB = new DataSource({
     type: "postgres",
@@ -8,7 +9,7 @@ export const connectDB = new DataSource({
     username: process.env.POSTGRES_USER || "postgres",
     password: process.env.POSTGRES_PASSWORD || "postgres",
     database: process.env.POSTGRES_DB || "postgres",
-    entities: [BotUser, Channel, ChannelToUser, Message],
+    entities: [BotUser, BroadCast, Channel, ChannelToUser, Message],
     synchronize: true,
     connectTimeoutMS: 0
 });
