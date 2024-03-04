@@ -9,23 +9,7 @@ import * as Utils from '../utils/wirebackend.utils';
 import * as Logger from '../utils/logging.utils';
 import { BotUser, Channel, ChannelToUser, BroadCast } from '../models';
 
-import { IConversationInit, IScimUserResponse, IAttachmentMessage, IBroadCast } from '../interfaces/interfaces';
-import connectDB from "../config/database";
- 
-interface HandlerDto {
-  body: any
-  isUserAdmin: boolean
-  appKey: string
-}
-
-interface IData{
-  data: string;
-}
-
-interface IMessage{
-  type: string;
-  text: IData;
-}
+import { IScimUserResponse, IAttachmentMessage, IBroadCast, IMessage } from '../interfaces/interfaces';
 
 let romanBase = 'https://proxy.services.wire.com/';
 
@@ -33,13 +17,18 @@ let romanBase = 'https://proxy.services.wire.com/';
 let admins = "55150f06-c2a4-4c29-b99d-b08afe608172,9e54ce88-506e-43d7-b95b-af117d51000d";
 let appKey = "eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3dpcmUuY29tIiwic3ViIjoiZDBjZmY5YzctMGIwOS00NjM4LWFiYjUtODFlZDA0ODc1NmIwIn0.qWevLrDlJA_tf46Vw5FC7wzwP93RmqlHRNY62sCRGV8";
 let bearer = "Bearer km7a5l5VEIAXD-N_61_Xo-wh";
-let filePath = "./tmp"
+
+// let admins = process.env.ADMINS;
+// let appKey = process.env.APPKEY;
+// let bearer = "Bearer " + process.env.BEARER;
+
 
 @Route("roman")
 @Tags("Roman")
 export default class RomanController {
   @Post("/")
   public async getRomanResponse(@Body() body: any, @Header() header: any ): Promise<any> {
+    console.log(admins);
     Logger.logInfo(body);
     romanBase = romanBase.endsWith('/') ? romanBase : `${romanBase}/`;
     const { type, userId, messageId, conversationId } = body;
@@ -54,8 +43,6 @@ export default class RomanController {
 
   private async determmineHandler(isAdmin, body, appKey){
     const { type } = body;
-    // ToDo find better switch case
-
     if(type === "conversation.init"){
       return this.handleInit(isAdmin);
     }
@@ -136,14 +123,14 @@ export default class RomanController {
                   });        
         }
         else if(messageText.startsWith("/info")){
-          return ({type: 'text', text: {data: "Dev-Channel der Fraktion. Sie sind Administrator"}})
+          return ({type: 'text', text: {data: "Dev-Channel der Fraktion. Sie sind Administrator"}});
         }
         else if(messageText.startsWith("/stats")){
           let broadCastId = messageText.split(" ")[1];
           let message = "";
           await this.getBroadcastStat(appKey, broadCastId).then((value: IBroadCast) => {   
             value.report.forEach(elem => {
-              message = message + elem.type + " - " + elem.count.toString() + "\n" 
+              message = message + elem.type + " - " + elem.count.toString() + "\n";
             });
           });
           return ({
@@ -151,28 +138,32 @@ export default class RomanController {
             text: {
               data: message
             }
-          })
+          });
         }
         else if(messageText.startsWith("/last")){
           let message = ""
           await this.getBroadcastStat(appKey).then((value: IBroadCast) => {   
-            value.report.forEach(elem => {
-              message = message + elem.type + " - " + elem.count.toString() + "\n" 
-            });
+            if(value){
+              value.report.forEach(elem => {
+                message = message + elem.type + " - " + elem.count.toString() + "\n"; 
+              });
+            }else{
+              message = "Keine Broadcastnachrichten vorhanden."
+            }
           });
           return ({
             type: 'text',
             text: {
               data: message
             }
-          })
+          });
         }
         else if(messageText.startsWith("/broadcast")){
           const broadCast = messageText.substring(10);
           return this.broadCastMessage(broadCast, appKey, userId, messageId);
         }
         else{
-          return ({type: 'text', text: {data: "Haben Sie eine Kommando vergessen? Diese Nachricht wurde nicht versand und wird nicht protokolliert."}})
+          return ({type: 'text', text: {data: "Haben Sie eine Kommando vergessen? Diese Nachricht wurde nicht versand und wird nicht protokolliert."}});
         }
     }else{
       if(messageText.startsWith("/help")){
@@ -182,7 +173,7 @@ export default class RomanController {
                 });        
       }
       else if(messageText.startsWith("/info")){
-        return ({type: 'text', text: {data: "Dev-Channel der Fraktion."}})
+        return ({type: 'text', text: {data: "Dev-Channel der Fraktion."}});
       }
       else{
         this.handleUserMessage(body);
@@ -208,9 +199,9 @@ export default class RomanController {
                              "/stats <ID> - erzeugt eine Broadcast Nachricht\n" +
                              "/info - zeigt Informationen über den Kanal\n" ;
     if(isAdmin){
-      return ({type: 'text', text: {data: helpMessageAdmin}})  
+      return ({type: 'text', text: {data: helpMessageAdmin}});  
     }else{
-      return ({type: 'text', text: {data: helpMessageUser}})  
+      return ({type: 'text', text: {data: helpMessageUser}});  
     }
   }
 
@@ -220,7 +211,6 @@ export default class RomanController {
     let channelAdmins: string[] = admins.split(',');
     channelAdmins.forEach(async element => {
       let userInfo = await Userrepo.getUserByWireId(element);
-      console.log(userInfo)
       let channelUserInfo = await ChannelToUserRepo.getChannelToUserByUserId(userInfo.id);
       try{
         let auth:string = "Bearer " + channelUserInfo.userToken; 
@@ -245,9 +235,9 @@ export default class RomanController {
   }
 
   private async broadCastMessage(message: string, appKey: string, userId: string, messageId: string){
-    Logger.logInfo("broadCastMessage")
+    Logger.logInfo("broadCastMessage");
     try {
-      let broadCastMessage:IMessage = ({type: 'text', text: {data: message}})
+      let broadCastMessage:IMessage = ({type: 'text', text: {data: message}});
       await this.broadCastToWire(broadCastMessage, appKey).then((value:string) => {
         let newBroadcast:BroadCast = {
             broadCastId: value.split('"')[3],
@@ -273,7 +263,7 @@ export default class RomanController {
         let broadCastMessage = ({
           "type": "attachment",
           "attachment": {
-            "mimeType": "image/jpeg",
+            "mimeType": "application/pdf",
             "height": input.attachment.height,
             "width": input.attachment.width,
             "size": input.attachment.size,
@@ -296,7 +286,7 @@ export default class RomanController {
     Logger.logInfo("broadCastToWire");
     const romanBroadcastUri = romanBase + "api/broadcast";
     let id = "";
-    const res = await fetch(
+    await fetch(
       romanBroadcastUri,
       {
         method: 'POST',
@@ -314,24 +304,13 @@ export default class RomanController {
     });
     return id;
   }
-  /* const getBroadcastStats = async (appKey: string, broadcastId: string | undefined = undefined) => {
-    logDebug(`Retrieving broadcast stats for broadcast ${broadcastId}.`, { broadcastId });
-    const url = broadcastId ? `${romanBroadcast}?id=${broadcastId}` : romanBroadcast;
-    const request = await fetch(url, { method: 'GET', headers: { 'app-key': appKey } }).then(receiveJsonOrLogError);
-    return convertStats(request);
-  };
-  
-  const convertStats = ({ report }: { report: { type: string, count: number }[] }) =>
-    report
-    .map(({ type, count }) => `${type}: ${count}`)
-    .join('\n');
-  */
+
   private async getBroadcastStat(appKey:string, broadCastId?: string){
-    Logger.logInfo("getBroadcastStats")
+    Logger.logInfo("getBroadcastStats");
     let stats:IBroadCast;
     if(broadCastId){
       let romanUri = romanBase + `api/broadcast?id=${broadCastId}`;
-        const res = await fetch(
+        await fetch(
           romanUri,
           {
             method: 'GET',
@@ -350,7 +329,7 @@ export default class RomanController {
       let lastBroadcast:BroadCast = await Broadcastrepo.getLastBroadcast();
       if(lastBroadcast){
         let romanUri = romanBase + `api/broadcast?id=${lastBroadcast.broadCastId}`;
-        const res = await fetch(
+        await fetch(
           romanUri,
           {
             method: 'GET',

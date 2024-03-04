@@ -1,10 +1,9 @@
 import { DataSource } from "typeorm";
-import {BotUser, Channel, ChannelToUser, Message} from "../models";
-import { BroadCast } from "../models/broadcast";
+import { BotUser, Channel, ChannelToUser, Message, BroadCast } from "../models";
 
 export const connectDB = new DataSource({
     type: "postgres",
-    host: process.env.POSTGRES_HOST || "localhost",
+    host: process.env.POSTGRES_HOST || "broadcast-bot-backend-db-1",
     port: Number(process.env.POSTGRES_PORT) || 5432,
     username: process.env.POSTGRES_USER || "postgres",
     password: process.env.POSTGRES_PASSWORD || "postgres",
@@ -13,18 +12,5 @@ export const connectDB = new DataSource({
     synchronize: true,
     connectTimeoutMS: 0
 });
-
-
-/*const config: PostgresConnectionOptions = {
-  type: "postgres",
-  host: process.env.POSTGRES_HOST || "localhost",
-  port: Number(process.env.POSTGRES_PORT) || 5432,
-  username: process.env.POSTGRES_USER || "postgres",
-  password: process.env.POSTGRES_PASSWORD || "postgres",
-  database: process.env.POSTGRES_DB || "postgres",
-  entities: [],
-  synchronize: true,
-};*/
-
 
 export default connectDB;

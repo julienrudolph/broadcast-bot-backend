@@ -7,8 +7,8 @@ import romanRouter from "./roman.router";
 const router = express.Router();
 
 router.use("/", defaultRouter);
-router.use("/users", userRouter);
-router.use("/channel", channelRouter);
+// router.use("/users", userRouter);
+// router.use("/channel", channelRouter);
 router.use("/roman", romanRouter);
 
 export default router;

@@ -25,6 +25,14 @@ export interface IBroadCast{
   }];
 }
 
+export interface IMessage{
+  type: string;
+  text: IData;
+}
+
+interface IData{
+  data: string;
+}
 
 export interface IAttachmentMessage{ 
   botId: string,
