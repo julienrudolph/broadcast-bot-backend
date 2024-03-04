@@ -28,7 +28,7 @@ import { ChannelToUser, BotUser } from '../models';
     return user;
   };
 
-  export const getChannelToUserByWireUserId = async (id: number): Promise<ChannelToUser | null> => {
+  export const getChannelToUserByUserId = async (id: number): Promise<ChannelToUser | null> => {
     const channelToUserRepo = connectDB.getRepository(ChannelToUser);
     const user = await channelToUserRepo.findOne({where: {userId: id}});
     if (!user) return null;

@@ -62,3 +62,4 @@ export const logError = (
   message: string,
   otherProps: unknown = {}
 ) => log('ERROR', message, otherProps, 'LOG');
+

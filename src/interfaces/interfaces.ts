@@ -17,6 +17,15 @@ export interface IScimUserResponse {
   preferedLanguage: string;
 }
 
+export interface IBroadCast{
+  broadcastId: string;
+  report: [{
+    type: string;
+    count: number;
+  }];
+}
+
+
 export interface IAttachmentMessage{ 
   botId: string,
   type: string,

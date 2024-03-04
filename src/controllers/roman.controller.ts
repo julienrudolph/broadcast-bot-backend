@@ -3,12 +3,13 @@ import * as Userrepo from '../repositories/user.repo';
 import * as Channelrepo from '../repositories/channel.repo';
 import * as ChannelToUserRepo from '../repositories/channelToUser.repo';
 import * as Messagerepo from '../repositories/message.repo';
+import * as Broadcastrepo from '../repositories/broadcast.repo';
 
 import * as Utils from '../utils/wirebackend.utils';
 import * as Logger from '../utils/logging.utils';
-import { BotUser, Channel, ChannelToUser } from '../models';
+import { BotUser, Channel, ChannelToUser, BroadCast } from '../models';
 
-import { IConversationInit, IScimUserResponse, IAttachmentMessage } from '../interfaces/interfaces';
+import { IConversationInit, IScimUserResponse, IAttachmentMessage, IBroadCast } from '../interfaces/interfaces';
 import connectDB from "../config/database";
  
 interface HandlerDto {
@@ -28,7 +29,8 @@ interface IMessage{
 
 let romanBase = 'https://proxy.services.wire.com/';
 
-let admins = "55150f06-c2a4-4c29-b99d-b08afe608172";
+// let admins = "9e54ce88-506e-43d7-b95b-af117d51000d";
+let admins = "55150f06-c2a4-4c29-b99d-b08afe608172,9e54ce88-506e-43d7-b95b-af117d51000d";
 let appKey = "eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3dpcmUuY29tIiwic3ViIjoiZDBjZmY5YzctMGIwOS00NjM4LWFiYjUtODFlZDA0ODc1NmIwIn0.qWevLrDlJA_tf46Vw5FC7wzwP93RmqlHRNY62sCRGV8";
 let bearer = "Bearer km7a5l5VEIAXD-N_61_Xo-wh";
 let filePath = "./tmp"
@@ -38,34 +40,24 @@ let filePath = "./tmp"
 export default class RomanController {
   @Post("/")
   public async getRomanResponse(@Body() body: any, @Header() header: any ): Promise<any> {
-    console.log("ROMAN POST - " + new Date().toISOString );
-    console.log("HEADER");
-    console.log(header);
-    console.log("BODY")
-    console.log(body)
+    Logger.logInfo(body);
     romanBase = romanBase.endsWith('/') ? romanBase : `${romanBase}/`;
-    const romanBroadcast = `${romanBase}api/broadcast`;
-  
-    // const { admins, appKey } = await getConfigurationForAuth(authorizationToken);
-    // console.log(body);
-    // console.log(header)
-    const tempUserToken:string = header.Authorization
     const { type, userId, messageId, conversationId } = body;
     if(header.authorization === bearer){
       if(admins.includes(userId)){
-        return await this.determmineHandler(true, body , appKey, tempUserToken);
+        return await this.determmineHandler(true, body , appKey);
       }else{
-        return await this.determmineHandler(false, body, appKey, tempUserToken);
+        return await this.determmineHandler(false, body, appKey);
       }        
     }
   }
 
-  private async determmineHandler(isAdmin, body, appKey, tempUserToken:string ){
+  private async determmineHandler(isAdmin, body, appKey){
     const { type } = body;
     // ToDo find better switch case
 
     if(type === "conversation.init"){
-      return this.handleInit(isAdmin, body);
+      return this.handleInit(isAdmin);
     }
     if(type === "conversation.new_text"){
       return this.handleText(isAdmin, body, appKey);
@@ -77,12 +69,12 @@ export default class RomanController {
       return this.handleAssetPreview();
     }
     if(type === "conversation.asset.data"){
-      return this.handleAssetData(isAdmin, body, appKey, tempUserToken);
+      return this.handleAssetData(isAdmin, body, appKey);
     }
   }
 
   private async handleBotRequest(isAdmin: boolean, body){
-    console.log("BOT REQUEST - " + new Date().toISOString);
+    Logger.logInfo("handleBotRequest");
     let userInfo:IScimUserResponse = await Utils.getUserRichInfosById(body.userId);
     let user:BotUser = {
       displayName: userInfo.displayName,
@@ -119,10 +111,10 @@ export default class RomanController {
     let channelAdd = await ChannelToUserRepo.createChannelToUser(channelToUser);
   }
 
-  private async handleAssetData(isAdmin: boolean, body, appKey: string, tempUserToken: string){
-    console.log("handleAssetData - " + new Date().toISOString);
+  private async handleAssetData(isAdmin: boolean, body, appKey: string){
+    Logger.logInfo("handleAssetData");
     if(isAdmin){
-      return this.broadCastAsset(appKey, body.userId, body.messageId, body, tempUserToken );
+      return this.broadCastAsset(appKey,body);
     }else{
       return ({type: 'text', text: {data: "Im Broadcast sind keine Antworten möglich. Bei Fragen finden Sie hier https://www.cducsu.btg weitere Informationen."}}) 
     }
@@ -130,7 +122,7 @@ export default class RomanController {
 
   // toDo implement admin receives message from channel member
   private async handleText(isAdmin: boolean, body: any, appKey: string){
-    console.log("handleText - " + new Date().toISOString);
+    Logger.logInfo("handleText");
     const {text, userId , messageId} = body;
     const messageText:string = text?.data ?? '';
     if(isAdmin){
@@ -147,11 +139,33 @@ export default class RomanController {
           return ({type: 'text', text: {data: "Dev-Channel der Fraktion. Sie sind Administrator"}})
         }
         else if(messageText.startsWith("/stats")){
-          let broadCastId = text.split(" ")[1];
-          return this.getBroadcastStat(broadCastId, appKey);
+          let broadCastId = messageText.split(" ")[1];
+          let message = "";
+          await this.getBroadcastStat(appKey, broadCastId).then((value: IBroadCast) => {   
+            value.report.forEach(elem => {
+              message = message + elem.type + " - " + elem.count.toString() + "\n" 
+            });
+          });
+          return ({
+            type: 'text',
+            text: {
+              data: message
+            }
+          })
         }
         else if(messageText.startsWith("/last")){
-          return this.getBroadcastStat("broadCastI", appKey);
+          let message = ""
+          await this.getBroadcastStat(appKey).then((value: IBroadCast) => {   
+            value.report.forEach(elem => {
+              message = message + elem.type + " - " + elem.count.toString() + "\n" 
+            });
+          });
+          return ({
+            type: 'text',
+            text: {
+              data: message
+            }
+          })
         }
         else if(messageText.startsWith("/broadcast")){
           const broadCast = messageText.substring(10);
@@ -182,8 +196,8 @@ export default class RomanController {
 
   };
 
-  private async handleInit(isAdmin: boolean, body): Promise<IMessage> {
-    console.log("handleInit - " + new Date().toISOString);
+  private async handleInit(isAdmin: boolean): Promise<IMessage> {
+    Logger.logInfo("handleInit");
     const helpMessageUser = "Sie haben den Dev-Channel der Fraktion abonniert.\n\n" +
                             "/help - zeigt die Liste der Kommandos\n " +
                             "/info - zeigt Informationen über den Kanal\n" ;
@@ -201,15 +215,18 @@ export default class RomanController {
   }
 
   private async handleUserMessage(body){
-    console.log("handleUserMessage - " + new Date().toISOString);
+    Logger.logInfo("handleUserMessage");
     const romanMessageUri = romanBase + "api/conversation";
-    let channelAdmins:ChannelToUser[] = await ChannelToUserRepo.getAllAdminsForChannel();
+    let channelAdmins: string[] = admins.split(',');
     channelAdmins.forEach(async element => {
-      let userInfo = await Userrepo.getUserById(element.userId); 
+      let userInfo = await Userrepo.getUserByWireId(element);
+      console.log(userInfo)
+      let channelUserInfo = await ChannelToUserRepo.getChannelToUserByUserId(userInfo.id);
       try{
-        let auth:string = "Bearer " + element.userToken; 
+        let auth:string = "Bearer " + channelUserInfo.userToken; 
         let message = {
           "type" : "text",
+          "conversationId": channelUserInfo.conversationId,
           "text" : {
             "data": body.text.data
           }
@@ -228,28 +245,33 @@ export default class RomanController {
   }
 
   private async broadCastMessage(message: string, appKey: string, userId: string, messageId: string){
-    console.log("broadCastMessage - " + new Date().toISOString);
+    Logger.logInfo("broadCastMessage")
     try {
       let broadCastMessage:IMessage = ({type: 'text', text: {data: message}})
-      const broadCastId = await this.broadCastToWire(broadCastMessage, appKey); 
-      console.log(broadCastId);
+      await this.broadCastToWire(broadCastMessage, appKey).then((value:string) => {
+        let newBroadcast:BroadCast = {
+            broadCastId: value.split('"')[3],
+            message: message,
+            userId: userId
+          }
+          try{
+            let broadcastEntry = Broadcastrepo.createBroadcast(newBroadcast);
+            Logger.logInfo(JSON.stringify(broadcastEntry));
+          }catch(e){
+  
+          }
+      });
     }catch(e){
       console.log(e);
     }
   }
 
-  private async broadCastAsset(appKey: string, userId: string, messageId: string, body, tempUserToken:string){
-    console.log("broadCastAsset - " + new Date().toISOString);
+  private async broadCastAsset(appKey: string, body){
+    Logger.logInfo("broadCastAsset");
     try {
       let input:IAttachmentMessage = body;
-      let users:ChannelToUser[] = await ChannelToUserRepo.getAllChannelToUsers();
-      // console.log(users);
-      users.forEach(async elem => {
         let broadCastMessage = ({
-          // "botId": channelInfo.botId,
-          // "userId": userInfo.userId,
           "type": "attachment",
-          "conversationId": elem.conversationId,
           "attachment": {
             "mimeType": "image/jpeg",
             "height": input.attachment.height,
@@ -262,51 +284,36 @@ export default class RomanController {
             }
           }
         });
-        await this.broadCastAssetToWire(broadCastMessage, appKey, input.attachment.mimeType, elem.userToken).then(res => {
+      await this.broadCastToWire(broadCastMessage, appKey).then(res => {
 
-        }); 
       });
-      
     }catch(e){
       console.log(e);
     }
   }
 
-  private async broadCastAssetToWire(message, appKey: string, type: string, tempUserToken: string){
-    console.log("AssetToWire - " + new Date().toISOString);
-    const romanBroadcastUri = romanBase + "api/conversation";
-    let authToken = "Bearer " + tempUserToken;
-    let broadCastResult = await fetch(
-      romanBroadcastUri,
-      {
-        method: 'POST',
-        headers: {'Authorization': authToken, 'Accept': 'application/json', 'Content-Type':'application/json'},
-        body: JSON.stringify(message)
-      }    
-    ).then(res => {
-
-    });
-    console.log(broadCastResult);
-    return "";
-  }
-
-  private async broadCastToWire(message: IMessage, appKey: string){
-    console.log("broadCastTextToWire - " + new Date().toISOString);
+  private async broadCastToWire(message, appKey: string):Promise<string>{
+    Logger.logInfo("broadCastToWire");
     const romanBroadcastUri = romanBase + "api/broadcast";
-    let broadCastResult = await fetch(
+    let id = "";
+    const res = await fetch(
       romanBroadcastUri,
       {
         method: 'POST',
         headers: {'app-key': appKey, 'Accept': 'application/json', 'Content-Type': 'application/json'},
         body: JSON.stringify(message)
       }    
-    ).then(res => {
-
-      // console.log(res);
+    ).then(async (response:Response)  => {
+      await response.text().then(value => {
+        try {
+           id = value
+        }catch(ignored){
+  
+        }
+      });
     });
-    return "";
+    return id;
   }
-
   /* const getBroadcastStats = async (appKey: string, broadcastId: string | undefined = undefined) => {
     logDebug(`Retrieving broadcast stats for broadcast ${broadcastId}.`, { broadcastId });
     const url = broadcastId ? `${romanBroadcast}?id=${broadcastId}` : romanBroadcast;
@@ -319,9 +326,57 @@ export default class RomanController {
     .map(({ type, count }) => `${type}: ${count}`)
     .join('\n');
   */
-  private getBroadcastStat(broadCastId: string, appKey:string){
-    console.log("broadCastStatistics - " + new Date().toISOString);
+  private async getBroadcastStat(appKey:string, broadCastId?: string){
+    Logger.logInfo("getBroadcastStats")
+    let stats:IBroadCast;
+    if(broadCastId){
+      let romanUri = romanBase + `api/broadcast?id=${broadCastId}`;
+        const res = await fetch(
+          romanUri,
+          {
+            method: 'GET',
+            headers: {'app-key': appKey, 'Accept': 'application/json', 'Content-Type': 'application/json'},
+          }    
+        ).then(async (response:Response)  => {
+          await response.text().then(value => {
+            try {
+               stats = JSON.parse(value);
+            }catch(ignored){
+      
+            }
+          });
+        });
+    }else{
+      let lastBroadcast:BroadCast = await Broadcastrepo.getLastBroadcast();
+      if(lastBroadcast){
+        let romanUri = romanBase + `api/broadcast?id=${lastBroadcast.broadCastId}`;
+        const res = await fetch(
+          romanUri,
+          {
+            method: 'GET',
+            headers: {'app-key': appKey, 'Accept': 'application/json', 'Content-Type': 'application/json'},
+          }    
+        ).then(async (response:Response)  => {
+          await response.text().then(value => {
+            try {
+               stats = JSON.parse(value);
+            }catch(ignored){
+      
+            }
+          });
+        });
+      }
+    }
+    return stats;
   }
 
-  
+  /*
+  {"message":{"botId":"f917fa7d-39e3-4c3c-9960-5ed4115160dd",
+   "type":"conversation.reaction",
+   "userId":"9e54ce88-506e-43d7-b95b-af117d51000d",
+   "token":"eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3dpcmUuY29tIiwic3ViIjoiZjkxN2ZhN2QtMzllMy00YzNjLTk5NjAtNWVkNDExNTE2MGRkIiwiZXhwIjoxNzA5NTQxNTgwfQ.l6b5xJgBDquD6AUsN1ubekx5hLyJjo45JghbiYb80WU",
+   "messageId":"d82cc5a4-4856-4c6f-ac6b-0552344d665a",
+   "refMessageId":"12f993f4-a25e-41e1-908d-0b85a4fba70e",
+   "conversationId":"4eebcbf0-8334-4863-a2a4-35c7c60ef2a8","emoji":"👍"},"level":"INFO","type":"LOG"}
+  */
 }
