@@ -1,4 +1,4 @@
-version: "3"
+version: "3.8"
 services:
   #pgadmin:
   #  image: dpage/pgadmin4
@@ -13,6 +13,7 @@ services:
   #    - broadcast-bot
   db:
     image: postgres:latest
+    container_name: psql_database
     networks:
       - broadcast-bot
     environment:
@@ -20,8 +21,11 @@ services:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    volumes:
+      - db:/var/lib/postgresql/data
   app:
     image: bot-backend-dev:dev01
+    container_name: bot01-dev
     build:
       context: .
       dockerfile: Dockerfile.dev
@@ -42,3 +46,10 @@ networks:
   broadcast-bot:
     name: botnet
     external: true
+volumes:
+  db:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /opt/docker/wire/volumes/psql_db/

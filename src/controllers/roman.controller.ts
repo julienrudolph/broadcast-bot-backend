@@ -9,14 +9,33 @@ import * as Utils from '../utils/wirebackend.utils';
 import * as Logger from '../utils/logging.utils';
 import { BotUser, Channel, ChannelToUser, BroadCast } from '../models';
 
-import { IScimUserResponse, IAttachmentMessage, IBroadCast, IMessage } from '../interfaces/interfaces';
+import { IScimUserResponse, IBroadCast, IMessage } from '../interfaces/interfaces';
+import connectDB from "../config/database";
 
-let romanBase = 'https://proxy.services.wire.com/';
+
+
+// ToDo dev options use .env if we switching to production 
+
+// ToDo convert strings to string.js file ... maybe different languages
 
 // let admins = "9e54ce88-506e-43d7-b95b-af117d51000d";
 let admins = "55150f06-c2a4-4c29-b99d-b08afe608172,9e54ce88-506e-43d7-b95b-af117d51000d";
+
+/*
+Wire roman proxy config 
+
 let appKey = "eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3dpcmUuY29tIiwic3ViIjoiZDBjZmY5YzctMGIwOS00NjM4LWFiYjUtODFlZDA0ODc1NmIwIn0.qWevLrDlJA_tf46Vw5FC7wzwP93RmqlHRNY62sCRGV8";
 let bearer = "Bearer km7a5l5VEIAXD-N_61_Xo-wh";
+let romanBase = 'https://proxy.services.wire.com/';
+*/
+
+
+// self hosted roman  
+
+let appKey = "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJodHRwczovL3dpcmUuY29tIiwic3ViIjoiYzFlYzA3OTgtMjZlYS00YzMzLTgyMjktYzUxYmVjMWE5ZThkIn0.b8YO7VF8nNEOjQIh46XMgBO3lRyy6_qwYZgbE8nkJ5sShICaMCJhJdGv-R1_UzIVKJz6l31cqFrfIHZuZOjyRQ";
+let bearer = "Bearer XpFk1XxxbiNsYTOdAYJkrHLR";
+let romanBase = 'https://roman.myservicetest.de/';
+
 
 // let admins = process.env.ADMINS;
 // let appKey = process.env.APPKEY;
@@ -28,8 +47,9 @@ let bearer = "Bearer km7a5l5VEIAXD-N_61_Xo-wh";
 export default class RomanController {
   @Post("/")
   public async getRomanResponse(@Body() body: any, @Header() header: any ): Promise<any> {
-    console.log(admins);
     Logger.logInfo(body);
+    // console.log(header);
+    // console.log(body);
     romanBase = romanBase.endsWith('/') ? romanBase : `${romanBase}/`;
     const { type, userId, messageId, conversationId } = body;
     if(header.authorization === bearer){
@@ -57,6 +77,10 @@ export default class RomanController {
     }
     if(type === "conversation.asset.data"){
       return this.handleAssetData(isAdmin, body, appKey);
+    }
+    if(type === "conversation.file.preview"){
+      console.log(body);
+      // do i need to do something? 
     }
   }
 
@@ -113,12 +137,17 @@ export default class RomanController {
     const {text, userId , messageId} = body;
     const messageText:string = text?.data ?? '';
     if(isAdmin){
-        if(messageText.startsWith("/help")){
+        if(messageText.startsWith("/show")){
+          return this.getAllBroadcastsByUserId(userId);
+        }
+        else if(messageText.startsWith("/help")){
           return ({type: 'text', text: {data : "/help - zeigt die Liste der Kommandos an\n " +
                                                 "/broadcast <Nachricht> - erzeugt eine Broadcast Nachricht\n" +
                                                 "/last - zeigt die Statistik des letzten Broadcast an \n" +
                                                 "/stats <ID> - erzeugt eine Broadcast Nachricht\n" +
-                                                "/info - zeigt Informationen über den Kanal\n"   
+                                                "/info - zeigt Informationen über den Kanal\n" + 
+                                                "/show - zeigt alle Broadcast des aktuellen Benutzers an\n" +
+                                                "/members - zeigt alle Abonnenten des Kanals an"   
                                         }
                   });        
         }
@@ -139,6 +168,22 @@ export default class RomanController {
               data: message
             }
           });
+        }else if(messageText.startsWith("/members")){
+          let message:String = "";
+          await this.getChannelMember().then((response:BotUser[]) => {
+            message = message + "Anzahl: " + response.length.toString() + "\n\n";
+            response.forEach(elem => {
+              message = message + "Name: " + elem.displayName + " - EMail: " + elem.email + "\n";
+            });  
+            console.log(message);
+          });
+          return ({
+            type: 'text', 
+            text: {
+              data: message
+            }
+          });
+          // return ({type: 'text', text: {data: "Es konnten Benutzer gefunden werden."}});
         }
         else if(messageText.startsWith("/last")){
           let message = ""
@@ -163,24 +208,49 @@ export default class RomanController {
           return this.broadCastMessage(broadCast, appKey, userId, messageId);
         }
         else{
-          return ({type: 'text', text: {data: "Haben Sie eine Kommando vergessen? Diese Nachricht wurde nicht versand und wird nicht protokolliert."}});
+          return ({type: 'text', text: {data: "Haben Sie ein Kommando vergessen? Diese Nachricht wurde nicht versand und wird nicht protokolliert."}});
         }
     }else{
       if(messageText.startsWith("/help")){
         return ({type: 'text', text: {data : "/help - zeigt die Liste der Kommandos\n " +
-                                              "/info - zeigt Informationen über den Kanal\n"   
+                                             "/info - zeigt Informationen über den Kanal\n"   
                                       }
                 });        
       }
       else if(messageText.startsWith("/info")){
         return ({type: 'text', text: {data: "Dev-Channel der Fraktion."}});
       }
-      else{
+      else if(messageText.startsWith("/")){
+        return ({
+          type: 'text',
+          text: {
+            data: 'Leider stehen Ihnen keine weiteren Kommandos zur Verfügung.'
+          }
+        })
+      
+      }else{
         this.handleUserMessage(body);
-        
         // return ({type: 'text', text: {data: "Diese Nachricht wird nicht weitergeleitet und nicht protokolliert."}})
       }
     } 
+  }
+
+  private async getAllBroadcastsByUserId(userId: string){
+    const broadCast:BroadCast[] = await Broadcastrepo.getBroadcastsByUserId(userId);
+    let message: string = "Folgende Broadcastnachrichten wurden zu Ihrem Benutzer gefunden: \n\n"
+    if(broadCast){
+      broadCast.forEach(elem => {
+        if(elem){
+          message = message + " BroadCast ID: " + elem.broadCastId + '\n'
+        }
+      });
+      return ({
+        type: 'text',
+        text: {
+          data: message
+        }
+      }) 
+    }
   }
 
   private async handleAssetPreview(){
@@ -197,7 +267,8 @@ export default class RomanController {
                              "/broadcast <Nachricht> - erzeugt eine Broadcast Nachricht\n" +
                              "/last - zeigt die Statistik des letzten Broadcast an \n" +
                              "/stats <ID> - erzeugt eine Broadcast Nachricht\n" +
-                             "/info - zeigt Informationen über den Kanal\n" ;
+                             "/info - zeigt Informationen über den Kanal\n" +
+                             "/member - zeigt alle Abonnenten des Kanals an\n";
     if(isAdmin){
       return ({type: 'text', text: {data: helpMessageAdmin}});  
     }else{
@@ -208,6 +279,7 @@ export default class RomanController {
   private async handleUserMessage(body){
     Logger.logInfo("handleUserMessage");
     const romanMessageUri = romanBase + "api/conversation";
+    let sender = await Userrepo.getUserByWireId(body.userId);
     let channelAdmins: string[] = admins.split(',');
     channelAdmins.forEach(async element => {
       let userInfo = await Userrepo.getUserByWireId(element);
@@ -218,7 +290,7 @@ export default class RomanController {
           "type" : "text",
           "conversationId": channelUserInfo.conversationId,
           "text" : {
-            "data": body.text.data
+            "data": sender.displayName + " schrieb: " + body.text.data
           }
         }
         fetch(
@@ -257,26 +329,31 @@ export default class RomanController {
   }
 
   private async broadCastAsset(appKey: string, body){
+    console.log(body);
     Logger.logInfo("broadCastAsset");
     try {
-      let input:IAttachmentMessage = body;
+      /* let input:IAttachmentMessage = body;
         let broadCastMessage = ({
           "type": "attachment",
           "attachment": {
-            "mimeType": "application/pdf",
+            "mimeType": body.attachment.mimeType,
             "height": input.attachment.height,
             "width": input.attachment.width,
             "size": input.attachment.size,
+            "name": input.attachment.name,
             "meta": {
-              "assetId": input.attachment.meta.assetId,
+              "assetId": body.attachment.meta.assetId,
               "sha256": body.attachment.meta.sha256,
               "otrKey": body.attachment.meta.otrKey  
             }
           }
-        });
-      await this.broadCastToWire(broadCastMessage, appKey).then(res => {
-
-      });
+        });*/
+        let message = {
+          type: "attachment",
+          attachment: body.attachment
+        }
+      await this.broadCastToWire(message, appKey).then(res => {
+    });
     }catch(e){
       console.log(e);
     }
@@ -296,7 +373,7 @@ export default class RomanController {
     ).then(async (response:Response)  => {
       await response.text().then(value => {
         try {
-           id = value
+           id = value;
         }catch(ignored){
   
         }
@@ -349,13 +426,32 @@ export default class RomanController {
     return stats;
   }
 
-  /*
-  {"message":{"botId":"f917fa7d-39e3-4c3c-9960-5ed4115160dd",
-   "type":"conversation.reaction",
-   "userId":"9e54ce88-506e-43d7-b95b-af117d51000d",
-   "token":"eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3dpcmUuY29tIiwic3ViIjoiZjkxN2ZhN2QtMzllMy00YzNjLTk5NjAtNWVkNDExNTE2MGRkIiwiZXhwIjoxNzA5NTQxNTgwfQ.l6b5xJgBDquD6AUsN1ubekx5hLyJjo45JghbiYb80WU",
-   "messageId":"d82cc5a4-4856-4c6f-ac6b-0552344d665a",
-   "refMessageId":"12f993f4-a25e-41e1-908d-0b85a4fba70e",
-   "conversationId":"4eebcbf0-8334-4863-a2a4-35c7c60ef2a8","emoji":"👍"},"level":"INFO","type":"LOG"}
-  */
+  private async getChannelMember(){
+    try{
+      let users:BotUser[] = await Userrepo.getUsers();
+      return users;
+    }catch(e){
+      return [];
+    }
+  }
+
+  private async handleReaction(){
+    /*
+      {"message":{"botId":"f917fa7d-39e3-4c3c-9960-5ed4115160dd",
+      "type":"conversation.reaction",
+      "userId":"9e54ce88-506e-43d7-b95b-af117d51000d",
+      "token":"eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3dpcmUuY29tIiwic3ViIjoiZjkxN2ZhN2QtMzllMy00YzNjLTk5NjAtNWVkNDExNTE2MGRkIiwiZXhwIjoxNzA5NTQxNTgwfQ.l6b5xJgBDquD6AUsN1ubekx5hLyJjo45JghbiYb80WU",
+      "messageId":"d82cc5a4-4856-4c6f-ac6b-0552344d665a",
+      "refMessageId":"12f993f4-a25e-41e1-908d-0b85a4fba70e",
+      "conversationId":"4eebcbf0-8334-4863-a2a4-35c7c60ef2a8","emoji":"👍"},"level":"INFO","type":"LOG"}
+    */
+
+    // should something happen if user reacts to message in channel --> maybe something like polls 
+    /*
+      save user input to tables --> user should react with thumps up or down 
+      --> /reaction command could be uses to display last poll /reaction <ID> could be used to show 
+      reactions to specific message 
+    */ 
+  }
+
 }

@@ -24,6 +24,11 @@ export const getBroadcastById = async (id:number): Promise<BroadCast> => {
   return broadcastRepository.findOne({where: {id: id}});
 };
 
+export const getBroadcastsByUserId = async(userId: string): Promise<Array<BroadCast>> => {
+  const broadcastRepository = connectDB.getRepository(BroadCast);
+  return broadcastRepository.find({where: {userId : userId}})
+}
+
 export const createBroadcast = async (payload: BroadCast): Promise<BroadCast> => {
   const broadcastRepository = connectDB.getRepository(BroadCast);
   const broadCast = new BroadCast();
