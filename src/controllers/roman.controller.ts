@@ -10,8 +10,8 @@ import * as Logger from '../utils/logging.utils';
 import { BotUser, Channel, ChannelToUser, BroadCast } from '../models';
 
 import { IScimUserResponse, IBroadCast, IMessage } from '../interfaces/interfaces';
-import connectDB from "../config/database";
 
+import {readFile} from 'fs/promises';
 
 
 // ToDo dev options use .env if we switching to production 
@@ -31,11 +31,10 @@ let romanBase = 'https://proxy.services.wire.com/';
 
 
 // self hosted roman  
-
-let appKey = "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJodHRwczovL3dpcmUuY29tIiwic3ViIjoiYzFlYzA3OTgtMjZlYS00YzMzLTgyMjktYzUxYmVjMWE5ZThkIn0.b8YO7VF8nNEOjQIh46XMgBO3lRyy6_qwYZgbE8nkJ5sShICaMCJhJdGv-R1_UzIVKJz6l31cqFrfIHZuZOjyRQ";
-let bearer = "Bearer XpFk1XxxbiNsYTOdAYJkrHLR";
+let appKey = 'eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJodHRwczovL3dpcmUuY29tIiwic3ViIjoiYzFlYzA3OTgtMjZlYS00YzMzLTgyMjktYzUxYmVjMWE5ZThkIn0.b8YO7VF8nNEOjQIh46XMgBO3lRyy6_qwYZgbE8nkJ5sShICaMCJhJdGv-R1_UzIVKJz6l31cqFrfIHZuZOjyRQ';
+let bearer = 'Bearer XpFk1XxxbiNsYTOdAYJkrHLR';
 let romanBase = 'https://roman.myservicetest.de/';
-
+let whiteListPath = '/app/config.json';
 
 // let admins = process.env.ADMINS;
 // let appKey = process.env.APPKEY;
@@ -50,6 +49,7 @@ export default class RomanController {
     Logger.logInfo(body);
     // console.log(header);
     // console.log(body);
+    let whiteList = this.loadWhitelistFromFile();
     romanBase = romanBase.endsWith('/') ? romanBase : `${romanBase}/`;
     const { type, userId, messageId, conversationId } = body;
     if(header.authorization === bearer){
@@ -59,6 +59,14 @@ export default class RomanController {
         return await this.determmineHandler(false, body, appKey);
       }        
     }
+  }
+
+  private async loadWhitelistFromFile(){
+    const fileContent = await readFile('.env', 'utf-8');
+    if(fileContent){
+      return JSON.parse(fileContent);
+    }
+    return null;
   }
 
   private async determmineHandler(isAdmin, body, appKey){
@@ -85,6 +93,15 @@ export default class RomanController {
   }
 
   private async handleBotRequest(isAdmin: boolean, body){
+/*
+    toDo:
+    - implement positiv filter 
+      - take a list of email adresses
+      - take user by id from backend 
+      - lookup mail adress in allowed list
+      - if mail is found return 200 else return not permitted and return 409 in router
+*/ 
+
     Logger.logInfo("handleBotRequest");
     let userInfo:IScimUserResponse = await Utils.getUserRichInfosById(body.userId);
     let user:BotUser = {
