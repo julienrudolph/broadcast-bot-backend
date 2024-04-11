@@ -4,10 +4,11 @@ import * as Channelrepo from '../repositories/channel.repo';
 import * as ChannelToUserRepo from '../repositories/channelToUser.repo';
 import * as Messagerepo from '../repositories/message.repo';
 import * as Broadcastrepo from '../repositories/broadcast.repo';
+import * as Whitelistrepo from '../repositories/whitelist.repo';
 
 import * as Utils from '../utils/wirebackend.utils';
 import * as Logger from '../utils/logging.utils';
-import { BotUser, Channel, ChannelToUser, BroadCast } from '../models';
+import { BotUser, Channel, ChannelToUser, BroadCast, Whitelist } from '../models';
 
 import { IScimUserResponse, IBroadCast, IMessage } from '../interfaces/interfaces';
 
@@ -104,7 +105,9 @@ export default class RomanController {
       - if mail is found return 200 else return not permitted and return 409 in router
 */ 
 
+
     Logger.logInfo("handleBotRequest");
+
     let userInfo:IScimUserResponse = await Utils.getUserRichInfosById(body.userId);
     let user:BotUser = {
       displayName: userInfo.displayName,
@@ -112,6 +115,12 @@ export default class RomanController {
       userId: userInfo.id,
       createdAt: (new Date),
       updatedAt: (new Date)
+    }
+
+    // check if user is allowed to request bot 
+    let whitelist:Whitelist[] = await Whitelistrepo.getWhitelist();
+    if(!whitelist.find(item => {return item.mail === user.email})){
+      return "user_not_allowed";
     }
     let channel = await Channelrepo.getChannelByBotId(body.botId);
     if(!channel){
