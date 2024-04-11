@@ -48,8 +48,10 @@ export default class RomanController {
   public async getRomanResponse(@Body() body: any, @Header() header: any ): Promise<any> {
     Logger.logInfo(body);
     // console.log(header);
-    // console.log(body);
-    let whiteList = this.loadWhitelistFromFile();
+    console.log("Body");
+    console.log(body);
+    // let whiteList = this.loadWhitelistFromFile();
+    // console.log(process.env);
     romanBase = romanBase.endsWith('/') ? romanBase : `${romanBase}/`;
     const { type, userId, messageId, conversationId } = body;
     if(header.authorization === bearer){
@@ -349,11 +351,11 @@ export default class RomanController {
     console.log(body);
     Logger.logInfo("broadCastAsset");
     try {
-      /* let input:IAttachmentMessage = body;
+      let input = body;
         let broadCastMessage = ({
           "type": "attachment",
           "attachment": {
-            "mimeType": body.attachment.mimeType,
+            "mimeType": "image/jpg",
             "height": input.attachment.height,
             "width": input.attachment.width,
             "size": input.attachment.size,
@@ -364,12 +366,12 @@ export default class RomanController {
               "otrKey": body.attachment.meta.otrKey  
             }
           }
-        });*/
+        });
         let message = {
           type: "attachment",
           attachment: body.attachment
         }
-      await this.broadCastToWire(message, appKey).then(res => {
+      await this.broadCastToWire(broadCastMessage, appKey).then(res => {
     });
     }catch(e){
       console.log(e);

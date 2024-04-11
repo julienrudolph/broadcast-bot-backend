@@ -7,7 +7,7 @@ import {
 @Entity()
 export class Whitelist {
   @PrimaryGeneratedColumn()
-  id!: number;
+  id?: number;
 
   @Column()
   mail!: string;
