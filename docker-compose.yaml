@@ -11,6 +11,7 @@ services:
   #    - PGADMIN_DEFAULT_PASSWORD=postgres
   #  networks:
   #    - broadcast-bot
+  # each bot has its own database
   db:
     image: postgres:latest
     container_name: psql_database

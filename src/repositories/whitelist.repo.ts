@@ -37,3 +37,28 @@ import { Whitelist } from '../models/whiteList';
     });
     return error;
   }
+
+  export const renewWhitelist = async (payload: string[]): Promise<string> => {
+    const whitelistRepo = connectDB.getRepository(Whitelist);
+    // check if payload contains only valid mails
+    let addArray:Whitelist[] = [];
+    if(payload && payload.length > 0){
+      let mailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"; 
+      payload.forEach(elem => {
+        console.log("forEach payload");
+        console.log(elem);
+        if(!elem.match(mailRegex)){
+          return "error_mail_format";
+        }
+        addArray.push({mail: elem});
+      });
+    }
+    await connectDB.manager.transaction(async (transactionEntityManager) => {
+      let tmp:Whitelist[] = await whitelistRepo.find();
+      tmp.forEach(elem => {
+        whitelistRepo.delete({mail: elem.mail});
+      });  
+      await whitelistRepo.save(addArray);
+    });
+    return "success";
+  }

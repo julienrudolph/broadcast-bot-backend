@@ -5,8 +5,8 @@ import {Whitelist} from '../models';
 
 let bearer:string = "SGFsbG8gV2VsdAo="
 
-@Route("json")
-@Tags("json")
+@Route("whitelist")
+@Tags("whitelist")
 export default class WhitelistController {
 
   private async isAuthenticated(bearerHeader:string){
@@ -67,6 +67,19 @@ export default class WhitelistController {
       return "Unauthorized";
     }
   } 
+
+  @Post("/renewList")
+  public async renewList(@Body() body:any, @Header() header:any): Promise<any>{
+    if(this.isAuthenticated(header.authorization)){
+      if(body && body.length > 0){
+        return WhitelistRepo.renewWhitelist(body);
+      }else{
+        return "error_json_input";
+      }
+    }else{
+      return "error_not_authenticated";
+    }
+  }
 
   @Post("/delete")
   public async delete(@Body() body: any, @Header() header:any): Promise<any> {

@@ -40,6 +40,31 @@ whitelistRouter.post("/add", async (_req, res) => {
   }
 });
 
+
+// todo implement renew function in controller --> send post with actual list 
+// --> take all existing elements and delete them, take new list and add (one transaction)
+whitelistRouter.post("/renewList", async (_req, res) => {
+  const controller =  new WhitelistController();
+  if(!_req.headers.authorization){
+    return res.status(400).send('Missing authorization');
+  }else{
+    const response = await controller.renewList(_req.body, _req.header);
+    switch(response){
+      case 'error_json_input': 
+        return res.status(501).send("invalid json");
+      case 'error_not_authenticated':
+        return res.status(401).send("unauthenticated"); 
+      case 'error_mail_format':
+        return res.status(501).send("error while checkng mail addresses")
+      case 'success':
+        return res.status(200).send('success');
+      default:
+        return res.status(501).send('something went wrong');
+    }
+  }
+});
+
+
 whitelistRouter.post("/delete", async (_req, res) => {
   const controller = new WhitelistController();
   if(!_req.headers.authorization){
