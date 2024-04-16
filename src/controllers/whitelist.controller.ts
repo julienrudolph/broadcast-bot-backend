@@ -43,7 +43,6 @@ export default class WhitelistController {
         let mailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
         let addArray:Whitelist[] = [];
         let existingWhitelist = await WhitelistRepo.getWhitelist();
-        console.log(existingWhitelist);
         whitelist.forEach(elem => {
           if(!elem.match(mailRegex)){
             return "error_mail_format";
@@ -54,15 +53,11 @@ export default class WhitelistController {
             });
           }
         });
-        let tmp = await WhitelistRepo.saveWhitelist(addArray);
-        console.log(tmp); 
+        let tmp = await WhitelistRepo.saveWhitelist(addArray); 
         return "success";
-
       }else{
         return "error_input";
       }
-      
-      // WhitelistRepo.saveWhitelist()
     }else{
       return "Unauthorized";
     }
@@ -100,8 +95,9 @@ export default class WhitelistController {
         }
         });
         let tmp = await WhitelistRepo.deleteWhitelistEntries(addArray); 
-        console.log(tmp);
-        return "success";
+        if(tmp){
+          return "success";
+        }
       }else{
         return "error_input";
       }
@@ -110,4 +106,3 @@ export default class WhitelistController {
     }
   }
 }
-

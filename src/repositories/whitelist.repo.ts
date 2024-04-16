@@ -1,7 +1,6 @@
 import { connectDB } from '../config/database';
 import { Whitelist } from '../models/whiteList';
 
-
   export const getWhitelist = async (): Promise<Array<Whitelist>> => {
     const whitelistRepository = connectDB.getRepository(Whitelist);
     return whitelistRepository.find();
@@ -9,10 +8,8 @@ import { Whitelist } from '../models/whiteList';
 
   export const saveWhitelist = async (payload: Whitelist[]): Promise<boolean> => {
     const whitelistRepo = connectDB.getRepository(Whitelist);
-    console.log("Payload");
     let error = false;
     payload.forEach(elem => {
-      console.log(elem);
       let entry:Whitelist = {
         mail: elem.mail
       }
@@ -45,20 +42,27 @@ import { Whitelist } from '../models/whiteList';
     if(payload && payload.length > 0){
       let mailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"; 
       payload.forEach(elem => {
-        console.log("forEach payload");
-        console.log(elem);
         if(!elem.match(mailRegex)){
           return "error_mail_format";
         }
         addArray.push({mail: elem});
       });
     }
-    await connectDB.manager.transaction(async (transactionEntityManager) => {
-      let tmp:Whitelist[] = await whitelistRepo.find();
-      tmp.forEach(elem => {
-        whitelistRepo.delete({mail: elem.mail});
+    const queryRunner = connectDB.createQueryRunner();
+    await queryRunner.connect();
+    let tmp:Whitelist[] = await queryRunner.query("SELECT * FROM whitelist");
+    await queryRunner.startTransaction()
+    try {
+      tmp.forEach(async elem => {
+        await queryRunner.manager.delete(elem);
       });  
-      await whitelistRepo.save(addArray);
-    });
-    return "success";
+      await queryRunner.manager.save(addArray);
+      await queryRunner.commitTransaction();
+    } catch (err) {
+        await queryRunner.rollbackTransaction();
+        return "error_while_transaction";
+    } finally {
+        await queryRunner.release();
+        return "success";
+    }
   }

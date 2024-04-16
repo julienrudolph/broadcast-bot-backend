@@ -47,12 +47,6 @@ let whiteListPath = '/app/config.json';
 export default class RomanController {
   @Post("/")
   public async getRomanResponse(@Body() body: any, @Header() header: any ): Promise<any> {
-    Logger.logInfo(body);
-    // console.log(header);
-    console.log("Body");
-    console.log(body);
-    // let whiteList = this.loadWhitelistFromFile();
-    // console.log(process.env);
     romanBase = romanBase.endsWith('/') ? romanBase : `${romanBase}/`;
     const { type, userId, messageId, conversationId } = body;
     if(header.authorization === bearer){
@@ -364,7 +358,7 @@ export default class RomanController {
         let broadCastMessage = ({
           "type": "attachment",
           "attachment": {
-            "mimeType": "image/jpg",
+            "mimeType": body.attachment.mimeType,
             "height": input.attachment.height,
             "width": input.attachment.width,
             "size": input.attachment.size,
@@ -372,7 +366,8 @@ export default class RomanController {
             "meta": {
               "assetId": body.attachment.meta.assetId,
               "sha256": body.attachment.meta.sha256,
-              "otrKey": body.attachment.meta.otrKey  
+              "otrKey": body.attachment.meta.otrKey,
+              "domain": "wire.com"  
             }
           }
         });
@@ -390,6 +385,7 @@ export default class RomanController {
   private async broadCastToWire(message, appKey: string):Promise<string>{
     Logger.logInfo("broadCastToWire");
     const romanBroadcastUri = romanBase + "api/broadcast";
+    console.log(message);
     let id = "";
     await fetch(
       romanBroadcastUri,

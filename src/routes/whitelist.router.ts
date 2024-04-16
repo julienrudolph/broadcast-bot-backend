@@ -50,6 +50,8 @@ whitelistRouter.post("/renewList", async (_req, res) => {
   }else{
     const response = await controller.renewList(_req.body, _req.header);
     switch(response){
+      case 'error_while_transaction':
+        return res.status(501).send("error while performing database operations");
       case 'error_json_input': 
         return res.status(501).send("invalid json");
       case 'error_not_authenticated':
