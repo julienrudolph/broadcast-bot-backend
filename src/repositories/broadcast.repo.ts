@@ -1,7 +1,7 @@
 import { connectDB } from '../config/database';
 import { BroadCast } from '../models/broadcast';
 
-export const getBroadcast = async (): Promise<Array<BroadCast>> => {
+export const getBroadcast = async(): Promise<Array<BroadCast>> => {
   const broadcastRepository = connectDB.getRepository(BroadCast);
   return broadcastRepository.find();
 };
@@ -24,9 +24,15 @@ export const getBroadcastById = async (id:number): Promise<BroadCast> => {
   return broadcastRepository.findOne({where: {id: id}});
 };
 
-export const getBroadcastsByUserId = async(userId: string): Promise<Array<BroadCast>> => {
+export const getBroadcastsCount = async(count?: number): Promise<Array<BroadCast>> => {
   const broadcastRepository = connectDB.getRepository(BroadCast);
-  return broadcastRepository.find({where: {userId : userId}})
+  if(count > 20 || count == 0){
+    count = 20
+  } 
+  return broadcastRepository.find({
+    order: {createdAt: "DESC"},
+    take: count,
+  });
 }
 
 export const createBroadcast = async (payload: BroadCast): Promise<BroadCast> => {

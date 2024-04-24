@@ -57,18 +57,7 @@ export default class RomanController {
   }
 
   private async handleBotRequest(isAdmin: boolean, body){
-/*
-    toDo:
-    - implement positiv filter 
-      - take a list of email adresses
-      - take user by id from backend 
-      - lookup mail adress in allowed list
-      - if mail is found return 200 else return not permitted and return 409 in router
-*/ 
-
-
     Logger.logInfo("handleBotRequest");
-
     let userInfo:IScimUserResponse = await Utils.getUserRichInfosById(body.userId);
     let user:BotUser = {
       displayName: userInfo.displayName,
@@ -126,24 +115,13 @@ export default class RomanController {
     const {text, userId , messageId} = body;
     const messageText:string = text?.data ?? '';
     if(isAdmin){
-        if(messageText.startsWith("/show")){
-          return this.getAllBroadcastsByUserId(userId);
-        }
-        else if(messageText.startsWith("/help")){
-          return ({type: 'text', text: {data :  "/help - zeigt die Liste der Kommandos an\n " +
-                                                "/broadcast <Nachricht> - erzeugt eine Broadcast Nachricht\n" +
-                                                "/last - zeigt die Statistik des letzten Broadcast an \n" +
-                                                "/stats <ID> - erzeugt eine Broadcast Nachricht\n" +
-                                                "/info - zeigt Informationen über den Kanal\n" + 
-                                                "/show - zeigt alle Broadcast des aktuellen Benutzers an\n" +
-                                                "/members - zeigt alle Abonnenten des Kanals an"   
-                                        }
-                  });        
-        }
-        else if(messageText.startsWith("/info")){
-          return ({type: 'text', text: {data: "Dev-Channel der Fraktion. Sie sind Administrator"}});
-        }
-        else if(messageText.startsWith("/stats")){
+        if(messageText.match(/^\/list\s\d+$/)){
+          let count = messageText.split(" ")[1];
+          if(count){
+            return await this.getBroadcasts(count as unknown as number);
+          }
+          return this.getBroadcasts(0);
+        }else if(messageText.startsWith("/stats")){
           let broadCastId = messageText.split(" ")[1];
           let message = "";
           await this.getBroadcastStat(appKey, broadCastId).then((value: IBroadCast) => {   
@@ -157,7 +135,28 @@ export default class RomanController {
               data: message
             }
           });
-        }else if(messageText.startsWith("/members")){
+
+        }
+        else if(messageText.startsWith("/list")){
+          return await this.getBroadcasts(0);
+        }
+        else if(messageText.startsWith("/help")){
+          return ({type: 'text', text: {data :  "**/help** - zeigt die Liste der Kommandos an\n " +
+                                                "**/broadcast** <Nachricht> - erzeugt eine Broadcast Nachricht\n" +
+                                                "**/info** - zeigt Informationen über den aktuellen Kanal\n" + 
+                                                "**/list** - zeigt Informationen für alle Ihre Broadcasts an\n" +
+                                                "**/list** <Anzahl> - zeigt Informationen für die letzten <Anzahl> Ihrer Broadcasts an\n" +
+                                                "**/members** - zeigt alle Abonnenten des Kanals an\n" + 
+                                                "**/stats** <ID> - zeigt die Statistiken des Broadcast mit der <ID> an\n" +
+                                                "**/stats** last - zeigt die Statistik Ihrer letzten Broadcastnachricht\n\n" +
+                                                "Detailliertere Informationen finden Sie auf der [Lernplattform](https://gruppen.cducsu.de/sites/Lernplattform)."
+                                        }
+                  });        
+        }
+        else if(messageText.startsWith("/info")){
+          return ({type: 'text', text: {data: "Dev-Channel der Fraktion. Sie sind Broadcaster."}});
+        }
+        else if(messageText.startsWith("/members")){
           let message:String = "";
           await this.getChannelMember().then((response:BotUser[]) => {
             message = message + "Anzahl: " + response.length.toString() + "\n\n";
@@ -173,24 +172,6 @@ export default class RomanController {
             }
           });
           // return ({type: 'text', text: {data: "Es konnten Benutzer gefunden werden."}});
-        }
-        else if(messageText.startsWith("/last")){
-          let message = ""
-          await this.getBroadcastStat(appKey).then((value: IBroadCast) => {   
-            if(value){
-              value.report.forEach(elem => {
-                message = message + elem.type + " - " + elem.count.toString() + "\n"; 
-              });
-            }else{
-              message = "Keine Broadcastnachrichten vorhanden."
-            }
-          });
-          return ({
-            type: 'text',
-            text: {
-              data: message
-            }
-          });
         }
         else if(messageText.startsWith("/broadcast")){
           const broadCast = messageText.substring(10);
@@ -224,15 +205,16 @@ export default class RomanController {
     } 
   }
 
-  private async getAllBroadcastsByUserId(userId: string){
-    const broadCast:BroadCast[] = await Broadcastrepo.getBroadcastsByUserId(userId);
+  private async getBroadcasts(count: number){
+    const broadCast:BroadCast[] = await Broadcastrepo.getBroadcastsCount(count);
     let message: string = "Folgende Broadcastnachrichten wurden zu Ihrem Benutzer gefunden: \n\n"
     if(broadCast){
-      broadCast.forEach(elem => {
+      for (const elem of broadCast){
+        let user = await Userrepo.getUserByWireId(elem.userId);
         if(elem){
-          message = message + " BroadCast ID " + elem.id +  " vom " + elem.createdAt + '\n'
+          message = message + " BroadCast ID " + elem.id +  " vom " + elem.createdAt.toLocaleTimeString("de",{day:'numeric', month:'numeric',year:'numeric', hour:'numeric',minute:'numeric'}) + " versand von **" + user.displayName +  "**\n"
         }
-      });
+      }
       return ({
         type: 'text',
         text: {
@@ -249,15 +231,18 @@ export default class RomanController {
   private async handleInit(isAdmin: boolean): Promise<IMessage> {
     Logger.logInfo("handleInit");
     const helpMessageUser = "Sie haben den Dev-Channel der Fraktion abonniert.\n\n" +
-                            "/help - zeigt die Liste der Kommandos\n " +
-                            "/info - zeigt Informationen über den Kanal\n" ;
+      "/help - zeigt die Liste der Kommandos\n " +
+      "/info - zeigt Informationen über den Kanal\n" ;
     const helpMessageAdmin = "Sie haben den Dev-Channel der Fraktion abonniert. Sie sind Broadcaster.\n\n" +
-                             "/help - zeigt die Liste der Kommandos\n " +
-                             "/broadcast <Nachricht> - erzeugt eine Broadcast Nachricht\n" +
-                             "/last - zeigt die Statistik des letzten Broadcast an \n" +
-                             "/stats <ID> - erzeugt eine Broadcast Nachricht\n" +
-                             "/info - zeigt Informationen über den Kanal\n" +
-                             "/member - zeigt alle Abonnenten des Kanals an\n";
+      "**/help** - zeigt die Liste der Kommandos an\n " +
+      "**/broadcast** <Nachricht> - erzeugt eine Broadcast Nachricht\n" +
+      "**/info** - zeigt Informationen über den aktuellen Kanal\n" + 
+      "**/list** - zeigt Informationen für alle Ihre Broadcasts an\n" +
+      "**/list** <Anzahl> - zeigt Informationen für die letzten <Anzahl> Ihrer Broadcasts an\n" +
+      "**/members** - zeigt alle Abonnenten des Kanals an\n" + 
+      "**/stats** <ID> - zeigt die Statistiken des Broadcast mit der <ID> an\n" +
+      "**/stats** last - zeigt die Statistik Ihrer letzten Broadcastnachricht\n\n" +
+      "Detailliertere Informationen finden Sie auf der [Lernplattform](https://gruppen.cducsu.de/sites/Lernplattform)."
     if(isAdmin){
       return ({type: 'text', text: {data: helpMessageAdmin}});  
     }else{
@@ -377,7 +362,8 @@ export default class RomanController {
     Logger.logInfo("getBroadcastStats");
     let stats:IBroadCast;
     if(broadCastId){
-      let romanUri = romanBase + `api/broadcast?id=${broadCastId}`;
+      let broadCast = await Broadcastrepo.getBroadcastById(broadCastId as unknown as number);
+      let romanUri = romanBase + `api/broadcast?id=${broadCast.broadCastId}`;
         await fetch(
           romanUri,
           {
@@ -389,7 +375,6 @@ export default class RomanController {
             try {
                stats = JSON.parse(value);
             }catch(ignored){
-      
             }
           });
         });

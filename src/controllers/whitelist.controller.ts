@@ -3,12 +3,11 @@ import * as WhitelistRepo from "../repositories/whitelist.repo";
 
 import {Whitelist} from '../models';
 
-let bearer:string = "SGFsbG8gV2VsdAo="
+let bearer:string = process.env.WHITELIST_AUTH
 
 @Route("whitelist")
 @Tags("whitelist")
 export default class WhitelistController {
-
   private async isAuthenticated(bearerHeader:string){
     if(bearer === bearerHeader){
       return true;
