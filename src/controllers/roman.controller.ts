@@ -20,7 +20,7 @@ import {readFile} from 'fs/promises';
 // ToDo convert strings to string.js file ... maybe different languages
 
 // let admins = "9e54ce88-506e-43d7-b95b-af117d51000d";
-let admins = "55150f06-c2a4-4c29-b99d-b08afe608172,9e54ce88-506e-43d7-b95b-af117d51000d";
+let admins = "55150f06-c2a4-4c29-b99d-b08afe608172,9e54ce88-506e-43d7-b95b-af117d51000d,a895c685-613e-4d02-a692-c17b321ecb87";
 
 /*
 Wire roman proxy config 
@@ -163,7 +163,7 @@ export default class RomanController {
           return this.getAllBroadcastsByUserId(userId);
         }
         else if(messageText.startsWith("/help")){
-          return ({type: 'text', text: {data : "/help - zeigt die Liste der Kommandos an\n " +
+          return ({type: 'text', text: {data :  "/help - zeigt die Liste der Kommandos an\n " +
                                                 "/broadcast <Nachricht> - erzeugt eine Broadcast Nachricht\n" +
                                                 "/last - zeigt die Statistik des letzten Broadcast an \n" +
                                                 "/stats <ID> - erzeugt eine Broadcast Nachricht\n" +
@@ -230,7 +230,7 @@ export default class RomanController {
           return this.broadCastMessage(broadCast, appKey, userId, messageId);
         }
         else{
-          return ({type: 'text', text: {data: "Haben Sie ein Kommando vergessen? Diese Nachricht wurde nicht versand und wird nicht protokolliert."}});
+          return ({type: 'text', text: {data: "Haben Sie ein Kommando vergessen? Nutzen Sie **/help** um diese anzeigen. Diese Nachricht wurde nicht versand und wird nicht protokolliert."}});
         }
     }else{
       if(messageText.startsWith("/help")){
@@ -263,7 +263,7 @@ export default class RomanController {
     if(broadCast){
       broadCast.forEach(elem => {
         if(elem){
-          message = message + " BroadCast ID: " + elem.broadCastId + '\n'
+          message = message + " BroadCast ID " + elem.id +  " vom " + elem.createdAt + '\n'
         }
       });
       return ({

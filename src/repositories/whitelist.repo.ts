@@ -54,7 +54,7 @@ import { Whitelist } from '../models/whiteList';
     await queryRunner.startTransaction()
     try {
       tmp.forEach(async elem => {
-        await queryRunner.manager.delete(elem);
+        await queryRunner.manager.remove({id: elem.id});
       });  
       await queryRunner.manager.save(addArray);
       await queryRunner.commitTransaction();
