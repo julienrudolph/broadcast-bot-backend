@@ -48,11 +48,14 @@ export default class RomanController {
       return this.handleAssetPreview();
     }
     if(type === "conversation.asset.data"){
-      return this.handleAssetData(isAdmin, body, appKey);
+      return await this.handleAssetData(isAdmin, body, appKey);
     }
     if(type === "conversation.file.preview"){
-      console.log(body);
+      // console.log(body);
       // do i need to do something? 
+    }
+    if(type === "conversation.reaction"){
+      this.handleReaction();
     }
   }
 
@@ -103,7 +106,7 @@ export default class RomanController {
   private async handleAssetData(isAdmin: boolean, body, appKey: string){
     Logger.logInfo("handleAssetData");
     if(isAdmin){
-      return this.broadCastAsset(appKey,body);
+      return this.broadCastAsset(appKey, body, body.userId);
     }else{
       return ({type: 'text', text: {data: "Im Broadcast sind keine Antworten möglich. Bei Fragen finden Sie hier https://www.cducsu.btg weitere Informationen."}}) 
     }
@@ -115,99 +118,99 @@ export default class RomanController {
     const {text, userId , messageId} = body;
     const messageText:string = text?.data ?? '';
     if(isAdmin){
-        if(messageText.match(/^\/list\s\d+$/)){
-          let count = messageText.split(" ")[1];
-          if(count){
-            return await this.getBroadcasts(count as unknown as number);
+      if(messageText.match(/^\/list\s\d+$/)){
+        let count = messageText.split(" ")[1];
+        if(count){
+          return await this.getBroadcasts(count as unknown as number);
+        }
+        return this.getBroadcasts(0);
+      }else if(messageText.startsWith("/stats")){
+        let broadCastId = messageText.split(" ")[1];
+        let message = "";
+        await this.getBroadcastStat(appKey, broadCastId).then((value: IBroadCast) => {   
+          value.report.forEach(elem => {
+            message = message + elem.type + " - " + elem.count.toString() + "\n";
+          });
+        });
+        return ({
+          type: 'text',
+          text: {
+            data: message
           }
-          return this.getBroadcasts(0);
-        }else if(messageText.startsWith("/stats")){
-          let broadCastId = messageText.split(" ")[1];
-          let message = "";
-          await this.getBroadcastStat(appKey, broadCastId).then((value: IBroadCast) => {   
-            value.report.forEach(elem => {
-              message = message + elem.type + " - " + elem.count.toString() + "\n";
-            });
-          });
-          return ({
-            type: 'text',
-            text: {
-              data: message
-            }
-          });
+        });
 
-        }
-        else if(messageText.startsWith("/list")){
-          return await this.getBroadcasts(0);
-        }
-        else if(messageText.startsWith("/help")){
-          return ({type: 'text', text: {data :  "**/help** - zeigt die Liste der Kommandos an\n " +
-                                                "**/broadcast** <Nachricht> - erzeugt eine Broadcast Nachricht\n" +
-                                                "**/info** - zeigt Informationen über den aktuellen Kanal\n" + 
-                                                "**/list** - zeigt Informationen für alle Ihre Broadcasts an\n" +
-                                                "**/list** <Anzahl> - zeigt Informationen für die letzten <Anzahl> Ihrer Broadcasts an\n" +
-                                                "**/members** - zeigt alle Abonnenten des Kanals an\n" + 
-                                                "**/stats** <ID> - zeigt die Statistiken des Broadcast mit der <ID> an\n" +
-                                                "**/stats** last - zeigt die Statistik Ihrer letzten Broadcastnachricht\n\n" +
-                                                "Detailliertere Informationen finden Sie auf der [Lernplattform](https://gruppen.cducsu.de/sites/Lernplattform)."
-                                        }
-                  });        
-        }
-        else if(messageText.startsWith("/info")){
-          return ({type: 'text', text: {data: "Dev-Channel der Fraktion. Sie sind Broadcaster."}});
-        }
-        else if(messageText.startsWith("/members")){
-          let message:String = "";
-          await this.getChannelMember().then((response:BotUser[]) => {
-            message = message + "Anzahl: " + response.length.toString() + "\n\n";
-            response.forEach(elem => {
-              message = message + "Name: " + elem.displayName + " - EMail: " + elem.email + "\n";
-            });  
-            console.log(message);
-          });
-          return ({
-            type: 'text', 
-            text: {
-              data: message
-            }
-          });
-          // return ({type: 'text', text: {data: "Es konnten Benutzer gefunden werden."}});
-        }
-        else if(messageText.startsWith("/broadcast")){
-          const broadCast = messageText.substring(10);
-          return this.broadCastMessage(broadCast, appKey, userId, messageId);
-        }
-        else{
-          return ({type: 'text', text: {data: "Haben Sie ein Kommando vergessen? Nutzen Sie **/help** um diese anzeigen. Diese Nachricht wurde nicht versand und wird nicht protokolliert."}});
-        }
-    }else{
-      if(messageText.startsWith("/help")){
-        return ({type: 'text', text: {data : "/help - zeigt die Liste der Kommandos\n " +
-                                             "/info - zeigt Informationen über den Kanal\n"   
+      }
+      else if(messageText.startsWith("/list")){
+        return await this.getBroadcasts(0);
+      }
+      else if(messageText.startsWith("/help")){
+        return ({type: 'text', text: {data :  "**/help** - zeigt die Liste der Kommandos an\n " +
+                                              "**/broadcast** <Nachricht> - erzeugt eine Broadcast Nachricht\n" +
+                                              "**/info** - zeigt Informationen über den Kanal\n" + 
+                                              "**/list** - zeigt Informationen der letzten 20 Broadcasts an\n" +
+                                              "**/list** <Anzahl> - zeigt Informationen für die letzten <Anzahl> Broadcasts an\n" +
+                                              "**/members** - zeigt alle Abonnenten des Kanals an\n" + 
+                                              "**/stats** <ID> - zeigt die Statistiken des Broadcast mit der <ID> an\n" +
+                                              "**/stats** - zeigt die Statistik der letzten Broadcastnachricht\n\n" +
+                                              "Detailliertere Informationen finden Sie auf der [Lernplattform](https://gruppen.cducsu.de/sites/Lernplattform)."
                                       }
                 });        
       }
       else if(messageText.startsWith("/info")){
-        return ({type: 'text', text: {data: "Dev-Channel der Fraktion."}});
+        return ({type: 'text', text: {data: "Sie befinden sich im Kanal: " + process.env.CHANNEL_NAME + ". Sie sind Broadcaster."}});
+      }
+      else if(messageText.startsWith("/members")){
+        let message:String = "";
+        await this.getChannelMember().then((response:BotUser[]) => {
+          message = message + "Anzahl: " + response.length.toString() + "\n\n";
+          response.forEach(elem => {
+            message = message + "Name: " + elem.displayName + " - EMail: " + elem.email + "\n";
+          });  
+        });
+        return ({
+          type: 'text', 
+          text: {
+            data: message
+          }
+        });
+        // return ({type: 'text', text: {data: "Es konnten Benutzer gefunden werden."}});
+      }
+      else if(messageText.startsWith("/broadcast")){
+        const broadCast = messageText.substring(10);
+        return this.broadCastMessage(broadCast, appKey, userId, messageId);
+      }
+      else{
+        return ({type: 'text', text: {data: "Haben Sie ein Kommando vergessen? Nutzen Sie **/help** um diese anzeigen. Diese Nachricht wurde nicht verarbeitet und wird nur Ihnen angezeigt."}});
+      }
+    }else{
+      if(messageText.startsWith("/help")){
+        return ({type: 'text', text: {data : "Ihnen stehen folgende Kommandos zur Verfügung.\n\n" +
+                                        "**/help** - zeigt die Liste der Kommandos\n " +
+                                        "**/info** - zeigt Informationen über den Kanal\n"   
+                                      }
+                });        
+      }
+      else if(messageText.startsWith("/info")){
+        return ({type: 'text', text: {data: "Sie befinden sich im Kanal: " + process.env.CHANNEL_NAME + "\n Weitere Informationen erhalten Sie unter [hier](https://www.cducsu.de)." }});
       }
       else if(messageText.startsWith("/")){
         return ({
           type: 'text',
           text: {
-            data: 'Leider stehen Ihnen keine weiteren Kommandos zur Verfügung.'
+            data: 'Dies ist kein valides Kommando. Nutzen Sie /help um alle Kommandos anzuzeigen.'
           }
         })
       
       }else{
         this.handleUserMessage(body);
-        // return ({type: 'text', text: {data: "Diese Nachricht wird nicht weitergeleitet und nicht protokolliert."}})
+        return ({type: 'text', text: {data: "Die Nachricht wurde an die Broadcaster des Kanals übermittelt."}})
       }
     } 
   }
 
   private async getBroadcasts(count: number){
     const broadCast:BroadCast[] = await Broadcastrepo.getBroadcastsCount(count);
-    let message: string = "Folgende Broadcastnachrichten wurden zu Ihrem Benutzer gefunden: \n\n"
+    let message: string = "Folgende Broadcastnachrichten wurden in diesem Kanal versendet: \n\n"
     if(broadCast){
       for (const elem of broadCast){
         let user = await Userrepo.getUserByWireId(elem.userId);
@@ -220,7 +223,14 @@ export default class RomanController {
         text: {
           data: message
         }
-      }) 
+      }); 
+    }else{
+      return ({
+        type: 'text',
+        text: {
+          data: "Es wurden keine Nachrichten gefunden."
+        }
+      });
     }
   }
 
@@ -230,19 +240,22 @@ export default class RomanController {
 
   private async handleInit(isAdmin: boolean): Promise<IMessage> {
     Logger.logInfo("handleInit");
-    const helpMessageUser = "Sie haben den Dev-Channel der Fraktion abonniert.\n\n" +
-      "/help - zeigt die Liste der Kommandos\n " +
-      "/info - zeigt Informationen über den Kanal\n" ;
-    const helpMessageAdmin = "Sie haben den Dev-Channel der Fraktion abonniert. Sie sind Broadcaster.\n\n" +
+    const helpMessageUser = "Sie haben den " + process.env.CHANNEL_NAME + " abonniert.\n\n" +
+      "Ihnen stehen folgende Kommandos zur Verfügung.\n\n" +
+      "**/help** - zeigt die Liste der Kommandos\n " +
+      "**/info** - zeigt Informationen über den Kanal\n\n" +
+      "Detailliertere Informationen finden Sie auf der [Lernplattform](https://gruppen.cducsu.de/sites/Lernplattform).";
+    const helpMessageAdmin = "Sie haben den " + process.env.CHANNEL_NAME + " abonniert. Sie sind Broadcaster.\n\n" +
+      "Ihnen stehen folgende Kommandos zur Verfügung.\n\n" +
       "**/help** - zeigt die Liste der Kommandos an\n " +
       "**/broadcast** <Nachricht> - erzeugt eine Broadcast Nachricht\n" +
-      "**/info** - zeigt Informationen über den aktuellen Kanal\n" + 
-      "**/list** - zeigt Informationen für alle Ihre Broadcasts an\n" +
+      "**/info** - zeigt Informationen über den Kanal\n" + 
+      "**/list** - zeigt Informationen der letzten 20 Broadcasts an\n" +
       "**/list** <Anzahl> - zeigt Informationen für die letzten <Anzahl> Ihrer Broadcasts an\n" +
       "**/members** - zeigt alle Abonnenten des Kanals an\n" + 
       "**/stats** <ID> - zeigt die Statistiken des Broadcast mit der <ID> an\n" +
-      "**/stats** last - zeigt die Statistik Ihrer letzten Broadcastnachricht\n\n" +
-      "Detailliertere Informationen finden Sie auf der [Lernplattform](https://gruppen.cducsu.de/sites/Lernplattform)."
+      "**/stats** - zeigt die Statistik der letzten Broadcastnachricht\n\n" +
+      "Detailliertere Informationen finden Sie auf der [Lernplattform](https://gruppen.cducsu.de/sites/Lernplattform).";
     if(isAdmin){
       return ({type: 'text', text: {data: helpMessageAdmin}});  
     }else{
@@ -284,26 +297,32 @@ export default class RomanController {
     Logger.logInfo("broadCastMessage");
     try {
       let broadCastMessage:IMessage = ({type: 'text', text: {data: message}});
-      await this.broadCastToWire(broadCastMessage, appKey).then((value:string) => {
+      let result = await this.broadCastToWire(broadCastMessage, appKey).then(async (value:string) => {
         let newBroadcast:BroadCast = {
             broadCastId: value.split('"')[3],
             message: message,
             userId: userId
           }
           try{
-            let broadcastEntry = Broadcastrepo.createBroadcast(newBroadcast);
-            Logger.logInfo(JSON.stringify(broadcastEntry));
+            let broadcastEntry = await Broadcastrepo.createBroadcast(newBroadcast);
+            // Logger.logInfo(JSON.stringify(broadcastEntry));
+            return ({
+              type: 'text',
+              text: {
+                data: "Broadcast mit der ID " + broadcastEntry.id + " versendet."
+              }
+            }); 
           }catch(e){
   
           }
       });
+      return result;
     }catch(e){
       console.log(e);
     }
   }
 
-  private async broadCastAsset(appKey: string, body){
-    console.log(body);
+  private async broadCastAsset(appKey: string, body, userId:string ){
     Logger.logInfo("broadCastAsset");
     try {
       let input = body;
@@ -323,12 +342,25 @@ export default class RomanController {
             }
           }
         });
-        let message = {
-          type: "attachment",
-          attachment: body.attachment
+      let result = await this.broadCastToWire(broadCastMessage, appKey).then(async (value:string) => {
+        try{
+          let broadcastEntry = await Broadcastrepo.createBroadcast({
+            broadCastId: value.split('"')[3],
+            message: body.attachment.name,
+            userId: userId
+          });
+          // Logger.logInfo(JSON.stringify(broadcastEntry));
+          return ({
+            type: 'text',
+            text: {
+              data: "Broadcast mit der ID " + broadcastEntry.id + " versendet."
+            }
+          }); 
+        }catch(e){
+
         }
-      await this.broadCastToWire(broadCastMessage, appKey).then(res => {
-    });
+      });
+      return result;
     }catch(e){
       console.log(e);
     }
@@ -337,7 +369,6 @@ export default class RomanController {
   private async broadCastToWire(message, appKey: string):Promise<string>{
     Logger.logInfo("broadCastToWire");
     const romanBroadcastUri = romanBase + "api/broadcast";
-    console.log(message);
     let id = "";
     await fetch(
       romanBroadcastUri,
