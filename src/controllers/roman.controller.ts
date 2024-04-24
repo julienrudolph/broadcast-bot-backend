@@ -12,35 +12,10 @@ import { BotUser, Channel, ChannelToUser, BroadCast, Whitelist } from '../models
 
 import { IScimUserResponse, IBroadCast, IMessage } from '../interfaces/interfaces';
 
-import {readFile} from 'fs/promises';
-
-
-// ToDo dev options use .env if we switching to production 
-
-// ToDo convert strings to string.js file ... maybe different languages
-
-// let admins = "9e54ce88-506e-43d7-b95b-af117d51000d";
-let admins = "55150f06-c2a4-4c29-b99d-b08afe608172,9e54ce88-506e-43d7-b95b-af117d51000d,a895c685-613e-4d02-a692-c17b321ecb87";
-
-/*
-Wire roman proxy config 
-
-let appKey = "eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3dpcmUuY29tIiwic3ViIjoiZDBjZmY5YzctMGIwOS00NjM4LWFiYjUtODFlZDA0ODc1NmIwIn0.qWevLrDlJA_tf46Vw5FC7wzwP93RmqlHRNY62sCRGV8";
-let bearer = "Bearer km7a5l5VEIAXD-N_61_Xo-wh";
-let romanBase = 'https://proxy.services.wire.com/';
-*/
-
-
-// self hosted roman  
-let appKey = 'eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJodHRwczovL3dpcmUuY29tIiwic3ViIjoiYzFlYzA3OTgtMjZlYS00YzMzLTgyMjktYzUxYmVjMWE5ZThkIn0.b8YO7VF8nNEOjQIh46XMgBO3lRyy6_qwYZgbE8nkJ5sShICaMCJhJdGv-R1_UzIVKJz6l31cqFrfIHZuZOjyRQ';
-let bearer = 'Bearer XpFk1XxxbiNsYTOdAYJkrHLR';
-let romanBase = 'https://roman.myservicetest.de/';
-let whiteListPath = '/app/config.json';
-
-// let admins = process.env.ADMINS;
-// let appKey = process.env.APPKEY;
-// let bearer = "Bearer " + process.env.BEARER;
-
+let admins = process.env.ADMINS;
+let appKey = process.env.APPKEY;
+let bearer = "Bearer " + process.env.BEARER;
+let romanBase = process.env.ROMAN_BASE;
 
 @Route("roman")
 @Tags("Roman")
@@ -56,14 +31,6 @@ export default class RomanController {
         return await this.determmineHandler(false, body, appKey);
       }        
     }
-  }
-
-  private async loadWhitelistFromFile(){
-    const fileContent = await readFile('.env', 'utf-8');
-    if(fileContent){
-      return JSON.parse(fileContent);
-    }
-    return null;
   }
 
   private async determmineHandler(isAdmin, body, appKey){
