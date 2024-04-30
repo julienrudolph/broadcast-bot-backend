@@ -71,7 +71,7 @@ export default class RomanController {
     }
 
     // check if user is allowed to request bot 
-    if(process.env.ENABLE_WHITELIST){
+    if(process.env.ENABLE_WHITELIST === "true"){
       let whitelist:Whitelist[] = await Whitelistrepo.getWhitelist();
       if(!whitelist.find(item => {return item.mail === user.email})){
         return "user_not_allowed";
@@ -204,7 +204,7 @@ export default class RomanController {
         })
       
       }else{
-        if(process.env.ENABLE_USER_RESPONSE){
+        if(process.env.ENABLE_USER_RESPONSE === "true"){
           return ({type: 'text', text: {data: "Antworten sind in diesem Kanal nicht möglich. Ihre Nachricht wird nicht verarbeitet und nur Ihnen angezeigt."}});
         }else{
           this.handleUserMessage(body);
