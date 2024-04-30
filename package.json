@@ -9,7 +9,8 @@
     "prebuild": "npm run swagger",
     "build": "tsc",
     "dev": "concurrently \"nodemon\" \"nodemon -x tsoa spec\"",
-    "swagger": "tsoa spec"
+    "swagger": "tsoa spec",
+    "start": "node build/index.js"
   },
   "nodemonConfig": {
     "watch": [
@@ -37,6 +38,7 @@
     "dotenv": "^16.4.1",
     "express": "^4.18.2",
     "fs": "^0.0.1-security",
+    "joi": "^17.13.0",
     "npm": "^10.3.0",
     "pg": "^8.11.3",
     "reflect-metadata": "^0.2.1",
