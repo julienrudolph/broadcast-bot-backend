@@ -246,12 +246,12 @@ export default class RomanController {
 
   private async handleInit(isAdmin: boolean): Promise<IMessage> {
     Logger.logInfo("handleInit");
-    const helpMessageUser = "Sie haben den " + process.env.CHANNEL_NAME + " abonniert.\n\n" +
+    const helpMessageUser = "Sie haben den Kanal " + process.env.CHANNEL_NAME + " abonniert.\n\n" +
       "Ihnen stehen folgende Kommandos zur Verfügung.\n\n" +
       "**/help** - zeigt die Liste der Kommandos\n " +
       "**/info** - zeigt Informationen über den Kanal\n\n" +
       "Detailliertere Informationen finden Sie auf der [Lernplattform](https://gruppen.cducsu.de/sites/Lernplattform).";
-    const helpMessageAdmin = "Sie haben den " + process.env.CHANNEL_NAME + " abonniert. Sie sind Broadcaster.\n\n" +
+    const helpMessageAdmin = "Sie haben den Kanal " + process.env.CHANNEL_NAME + " abonniert. Sie sind Broadcaster.\n\n" +
       "Ihnen stehen folgende Kommandos zur Verfügung.\n\n" +
       "**/help** - zeigt die Liste der Kommandos an\n " +
       "**/broadcast** <Nachricht> - erzeugt eine Broadcast Nachricht\n" +
