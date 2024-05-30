@@ -50,10 +50,18 @@ import { Whitelist } from '../models/whiteList';
     }
     const queryRunner = connectDB.createQueryRunner();
     await queryRunner.connect();
+    /*
+       let tmp:number[] = await queryRunner.query("SELECT id FROM whitelist");
+       await queryRunner.startTransaction();
+       try{
+        await queryRunner.manager.delete({id: in(tmp)});
+       }
+    */
     let tmp:Whitelist[] = await queryRunner.query("SELECT * FROM whitelist");
-    await queryRunner.startTransaction()
+    await queryRunner.startTransaction();
     try {
       tmp.forEach(async elem => {
+        // await EmployeeAnswers.delete({ id: In(ids.employeeAnswersIds) });
         await queryRunner.manager.remove({id: elem.id});
       });  
       await queryRunner.manager.save(addArray);

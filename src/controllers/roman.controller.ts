@@ -22,6 +22,7 @@ let romanBase = process.env.ROMAN_BASE;
 export default class RomanController {
   @Post("/")
   public async getRomanResponse(@Body() body: any, @Header() header: any ): Promise<any> {
+    console.log("Response");
     romanBase = romanBase.endsWith('/') ? romanBase : `${romanBase}/`;
     const { type, userId, messageId, conversationId } = body;
     if(header.authorization === bearer){
@@ -114,7 +115,6 @@ export default class RomanController {
     }
   }
 
-  // toDo implement admin receives message from channel member
   private async handleText(isAdmin: boolean, body: any, appKey: string){
     Logger.logInfo("handleText");
     const {text, userId , messageId} = body;
@@ -178,6 +178,7 @@ export default class RomanController {
         // return ({type: 'text', text: {data: "Es konnten Benutzer gefunden werden."}});
       }
       else if(messageText.startsWith("/broadcast")){
+        // do i have to manuipulate the text further?
         const broadCast = messageText.substring(10);
         return this.broadCastMessage(broadCast, appKey, userId, messageId);
       }
@@ -467,4 +468,12 @@ export default class RomanController {
     */ 
   }
 
+  private async createPoll(){
+    /* toDo - RC3
+      - create table for polls
+      - create key / command to create poll ? Simple ones should be smth like this /poll "Left or Right?" create autotext for reaction with thumbs up / down
+      - react to reactions and count in database? 
+      - message id is important for refenrence 
+    */
+  }
 }
