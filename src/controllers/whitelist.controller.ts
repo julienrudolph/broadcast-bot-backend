@@ -94,7 +94,7 @@ export default class WhitelistController {
         }
         });
         let tmp = await WhitelistRepo.deleteWhitelistEntries(addArray); 
-        if(tmp){
+        if(!tmp){
           return "success";
         }
       }else{

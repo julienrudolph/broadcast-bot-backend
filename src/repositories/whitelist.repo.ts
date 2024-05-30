@@ -38,14 +38,14 @@ import { Whitelist } from '../models/whiteList';
   export const renewWhitelist = async (payload: string[]): Promise<string> => {
     const whitelistRepo = connectDB.getRepository(Whitelist);
     // check if payload contains only valid mails
-    let addArray:Whitelist[] = [];
+    let newList:Whitelist[] = [];
     if(payload && payload.length > 0){
       let mailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"; 
       payload.forEach(elem => {
         if(!elem.match(mailRegex)){
           return "error_mail_format";
         }
-        addArray.push({mail: elem});
+        newList.push({mail: elem});
       });
     }
     const queryRunner = connectDB.createQueryRunner();
@@ -57,8 +57,50 @@ import { Whitelist } from '../models/whiteList';
         await queryRunner.manager.delete({id: in(tmp)});
        }
     */
-    let tmp:Whitelist[] = await queryRunner.query("SELECT * FROM whitelist");
-    await queryRunner.startTransaction();
+    let currentList:Whitelist[] = await queryRunner.query("SELECT * FROM whitelist");
+    
+  let actionList = [{
+      action: "test",
+      mail: "test"
+  }]
+  currentList.forEach(elem => {
+      if(!newList.find(e => e.mail === elem.mail)){
+          actionList.push({
+              action: "delete",
+              mail: elem.mail
+          });
+      }
+  });
+  newList.forEach(elem => {
+      if(!currentList.find(e => e.mail === elem.mail)){
+          actionList.push({
+              action: "add",
+              mail: elem.mail
+          })
+      }
+  });
+  actionList = actionList.slice(1,actionList.length);
+  try{
+    actionList.forEach(async elem => {
+    if(elem.action === "add"){
+      let entry:Whitelist = {
+        mail: elem.mail
+      }
+      await queryRunner.manager.insert(Whitelist, {mail: elem.mail});
+      // result = whitelistRepo.save(entry);  
+    }else{
+      await queryRunner.manager.delete(Whitelist, {mail: elem.mail});
+      // result = whitelistRepo.delete({mail: elem.mail}); 
+    }
+  });
+  }catch(err) {
+      await queryRunner.rollbackTransaction();
+      return "error_while_transaction";
+    }finally{
+      // await queryRunner.release();
+        return "success";
+    }
+    /*await queryRunner.startTransaction();
     try {
       tmp.forEach(async elem => {
         // await EmployeeAnswers.delete({ id: In(ids.employeeAnswersIds) });
@@ -72,5 +114,6 @@ import { Whitelist } from '../models/whiteList';
     } finally {
         await queryRunner.release();
         return "success";
-    }
+    }*/
+
   }
