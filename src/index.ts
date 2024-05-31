@@ -7,6 +7,8 @@ import dataSource from "./config/database";
 
 import * as dotenv from "dotenv";
 
+import * as util from './utils/app.utils';
+
 dotenv.config();
 
 const PORT = process.env.PORT;
@@ -33,8 +35,12 @@ dataSource.initialize()
     console.error(`Data Source initialization error`, err);
   })
 
+setTimeout(async () => {
+  util.validateAdminsInDatabase();
+}, 5000);
+
+
 app.use(Router);
-// Hallo du da
 app.listen(PORT, () => {
   console.log("Server is running on port", PORT);
 });

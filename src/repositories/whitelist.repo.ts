@@ -50,70 +50,48 @@ import { Whitelist } from '../models/whiteList';
     }
     const queryRunner = connectDB.createQueryRunner();
     await queryRunner.connect();
-    /*
-       let tmp:number[] = await queryRunner.query("SELECT id FROM whitelist");
-       await queryRunner.startTransaction();
-       try{
-        await queryRunner.manager.delete({id: in(tmp)});
-       }
-    */
-    let currentList:Whitelist[] = await queryRunner.query("SELECT * FROM whitelist");
-    
-  let actionList = [{
-      action: "test",
-      mail: "test"
-  }]
-  currentList.forEach(elem => {
-      if(!newList.find(e => e.mail === elem.mail)){
-          actionList.push({
-              action: "delete",
-              mail: elem.mail
-          });
+    let currentList:Whitelist[] = await queryRunner.query("SELECT * FROM whitelist");    
+    let actionList = [{
+        action: "test",
+        mail: "test"
+    }]
+    currentList.forEach(elem => {
+        if(!newList.find(e => e.mail === elem.mail)){
+            actionList.push({
+                action: "delete",
+                mail: elem.mail
+            });
+        }
+    });
+    newList.forEach(elem => {
+        if(!currentList.find(e => e.mail === elem.mail)){
+            actionList.push({
+                action: "add",
+                mail: elem.mail
+            })
+        }
+    });
+    actionList = actionList.slice(1,actionList.length);
+    let error = false;
+    try{
+      actionList.forEach(async elem => {
+      if(elem.action === "add"){
+        let entry:Whitelist = {
+          mail: elem.mail
+        }
+        await queryRunner.manager.insert(Whitelist, {mail: elem.mail});  
+      }else{
+        await queryRunner.manager.delete(Whitelist, {mail: elem.mail});
       }
-  });
-  newList.forEach(elem => {
-      if(!currentList.find(e => e.mail === elem.mail)){
-          actionList.push({
-              action: "add",
-              mail: elem.mail
-          })
-      }
-  });
-  actionList = actionList.slice(1,actionList.length);
-  try{
-    actionList.forEach(async elem => {
-    if(elem.action === "add"){
-      let entry:Whitelist = {
-        mail: elem.mail
-      }
-      await queryRunner.manager.insert(Whitelist, {mail: elem.mail});
-      // result = whitelistRepo.save(entry);  
-    }else{
-      await queryRunner.manager.delete(Whitelist, {mail: elem.mail});
-      // result = whitelistRepo.delete({mail: elem.mail}); 
+    });
+    }catch(err) {
+      error = false;
     }
-  });
-  }catch(err) {
+    if(error){
       await queryRunner.rollbackTransaction();
       return "error_while_transaction";
-    }finally{
-      // await queryRunner.release();
-        return "success";
+    }else{
+      queryRunner.release();
+      return 'success';
     }
-    /*await queryRunner.startTransaction();
-    try {
-      tmp.forEach(async elem => {
-        // await EmployeeAnswers.delete({ id: In(ids.employeeAnswersIds) });
-        await queryRunner.manager.remove({id: elem.id});
-      });  
-      await queryRunner.manager.save(addArray);
-      await queryRunner.commitTransaction();
-    } catch (err) {
-        await queryRunner.rollbackTransaction();
-        return "error_while_transaction";
-    } finally {
-        await queryRunner.release();
-        return "success";
-    }*/
-
   }
