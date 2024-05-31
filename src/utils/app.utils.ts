@@ -15,44 +15,41 @@ export const validateAdminsInDatabase = async () => {
         adminUsers.push(tmp); 
       }
   }));
-  const queryRunner = connectDB.createQueryRunner();
-  await queryRunner.connect();
-  console.log(adminUsers);
-  let currentList:ChannelToUser[] = await queryRunner.manager.find(ChannelToUser, {where: {isAdmin: true}});
-  console.log("CurrentList");
-  console.log(currentList);
-
-  console.log("Adminlist");
-  console.log(adminUsers);
-  currentList.forEach(elem => {
-      if(!adminUsers.find(e => e.id === elem.userId)){
-          actionList.push({
-              action: "remove",
-              id: elem.id
-          });
+  if(adminUsers.length > 0){
+    const queryRunner = connectDB.createQueryRunner();
+    await queryRunner.connect();
+    let currentList:ChannelToUser[] = await queryRunner.manager.find(ChannelToUser, {where: {isAdmin: true}});
+    if(currentList.length > 0){
+      currentList.forEach(elem => {
+          if(!adminUsers.find(e => e.id === elem.userId)){
+              actionList.push({
+                  action: "remove",
+                  id: elem.id
+              });
+          }
+      });
+      adminUsers.forEach(elem => {
+          if(!currentList.find(e => e.userId === elem.id)){
+              actionList.push({
+                  action: "add",
+                  id: elem.id
+              })
+          }
+      });
+      try{
+        actionList.forEach(async elem => {
+        if(elem.action === "add"){
+          await queryRunner.manager.update(ChannelToUser, elem.id , {isAdmin: true});
+          // result = whitelistRepo.save(entry);  
+        }else{
+          await queryRunner.manager.update(ChannelToUser, elem.id, {isAdmin: false});
+          // result = whitelistRepo.delete({mail: elem.mail}); 
+        }
+      });
+      }catch(err) {
+        await queryRunner.rollbackTransaction();
+        return "error_while_transaction";
       }
-  });
-  adminUsers.forEach(elem => {
-      if(!currentList.find(e => e.userId === elem.id)){
-          actionList.push({
-              action: "add",
-              id: elem.id
-          })
-      }
-  });
-  console.log(actionList);
-  try{
-    actionList.forEach(async elem => {
-    if(elem.action === "add"){
-      await queryRunner.manager.update(ChannelToUser, elem.id , {isAdmin: true});
-      // result = whitelistRepo.save(entry);  
-    }else{
-      await queryRunner.manager.update(ChannelToUser, elem.id, {isAdmin: false});
-      // result = whitelistRepo.delete({mail: elem.mail}); 
     }
-  });
-  }catch(err) {
-    await queryRunner.rollbackTransaction();
-    return "error_while_transaction";
   }
 }
