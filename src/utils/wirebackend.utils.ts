@@ -1,7 +1,7 @@
 import { IConversationInit, IScimUserResponse } from '../interfaces/interfaces';
 
-const scimToken = process.ENV.SCIM_TOKEN
-const scimUrl = process.ENV.SCIM_URI
+const scimToken = process.env.SCIM_TOKEN
+const scimUrl = process.env.SCIM_URI
 
 export const getUserRichInfosById = async (id: string):Promise<IScimUserResponse> => {
   return new Promise<IScimUserResponse>((resolve, reject) => {
