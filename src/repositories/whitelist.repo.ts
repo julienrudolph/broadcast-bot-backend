@@ -1,6 +1,8 @@
 import { connectDB } from '../config/database';
 import { Whitelist } from '../models/whiteList';
 
+
+
   export const getWhitelist = async (): Promise<Array<Whitelist>> => {
     const whitelistRepository = connectDB.getRepository(Whitelist);
     return whitelistRepository.find();
@@ -73,18 +75,21 @@ import { Whitelist } from '../models/whiteList';
     });
     actionList = actionList.slice(1,actionList.length);
     let error = false;
-    try{
-      actionList.forEach(async elem => {
-      if(elem.action === "add"){
-        let entry:Whitelist = {
-          mail: elem.mail
+    try{ 
+      await Promise.all(actionList.map(async (elem) => {
+        if(elem.action === "add"){
+          let entry:Whitelist = {
+            mail: elem.mail
+          }
+          await queryRunner.manager.insert(Whitelist, {mail: elem.mail});  
+        }else{
+          await queryRunner.manager.delete(Whitelist, {mail: elem.mail});
         }
-        await queryRunner.manager.insert(Whitelist, {mail: elem.mail});  
-      }else{
-        await queryRunner.manager.delete(Whitelist, {mail: elem.mail});
-      }
-    });
+      }));
     }catch(err) {
+      console.log("try");
+
+      console.log(err);
       error = true;
     }
     if(error){
