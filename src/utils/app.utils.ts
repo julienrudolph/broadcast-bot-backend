@@ -1,10 +1,10 @@
 import * as ChannelToUserRepo from '../repositories/channelToUser.repo';
 import * as UserRepo from '../repositories/user.repo';
-import { ChannelToUser, BotUser } from '../models';
+import { ChannelToUser, BotUser, Whitelist } from '../models';
 import { connectDB } from '../config/database';
 
 let admins = process.env.ADMINS;
-console.log(admins);
+
 export const validateAdminsInDatabase = async () => {
   let actionList = [];
   let adminUsers:BotUser[] = [];

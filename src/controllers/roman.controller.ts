@@ -17,6 +17,14 @@ let appKey = process.env.APPKEY;
 let bearer = "Bearer " + process.env.BEARER;
 let romanBase = process.env.ROMAN_BASE;
 
+/*
+  Rebuild whitelisting
+
+  create variable -> onStartup load whitelist
+
+  --> on every action on whitelist add/renew/delete -> overwrite whitelist 
+*/
+
 @Route("roman")
 @Tags("Roman")
 export default class RomanController {
@@ -205,7 +213,7 @@ export default class RomanController {
         })
       
       }else{
-        if(process.env.ENABLE_USER_RESPONSE === "true"){
+        if(process.env.ENABLE_USER_RESPONSE === "false"){
           return ({type: 'text', text: {data: "Antworten sind in diesem Kanal nicht möglich. Ihre Nachricht wird nicht verarbeitet und nur Ihnen angezeigt."}});
         }else{
           this.handleUserMessage(body);

@@ -85,7 +85,7 @@ import { Whitelist } from '../models/whiteList';
       }
     });
     }catch(err) {
-      error = false;
+      error = true;
     }
     if(error){
       await queryRunner.rollbackTransaction();
