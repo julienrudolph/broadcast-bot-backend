@@ -37,7 +37,10 @@ dataSource.initialize()
 
 setTimeout(async () => {
   util.validateAdminsInDatabase();
+  util.setWhiteList();
 }, 5000);
+
+
 
 
 app.use(Router);

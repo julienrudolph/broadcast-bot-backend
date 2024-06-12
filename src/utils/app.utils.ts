@@ -2,8 +2,16 @@ import * as ChannelToUserRepo from '../repositories/channelToUser.repo';
 import * as UserRepo from '../repositories/user.repo';
 import { ChannelToUser, BotUser, Whitelist } from '../models';
 import { connectDB } from '../config/database';
+import { getWhitelist } from '../repositories/whitelist.repo';
+
 
 let admins = process.env.ADMINS;
+
+export var whitelist:Whitelist[];
+
+export const setWhiteList = async () => {
+  whitelist = await getWhitelist();
+}
 
 export const validateAdminsInDatabase = async () => {
   let actionList = [];

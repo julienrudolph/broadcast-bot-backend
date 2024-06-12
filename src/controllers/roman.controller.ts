@@ -8,6 +8,8 @@ import * as Whitelistrepo from '../repositories/whitelist.repo';
 
 import * as Utils from '../utils/wirebackend.utils';
 import * as Logger from '../utils/logging.utils';
+import * as apputils from '../utils/app.utils';
+
 import { BotUser, Channel, ChannelToUser, BroadCast, Whitelist } from '../models';
 
 import { IScimUserResponse, IBroadCast, IMessage } from '../interfaces/interfaces';
@@ -30,7 +32,7 @@ let romanBase = process.env.ROMAN_BASE;
 export default class RomanController {
   @Post("/")
   public async getRomanResponse(@Body() body: any, @Header() header: any ): Promise<any> {
-    console.log("Response");
+    console.log(apputils.whitelist);
     romanBase = romanBase.endsWith('/') ? romanBase : `${romanBase}/`;
     const { type, userId, messageId, conversationId } = body;
     if(header.authorization === bearer){
@@ -81,8 +83,8 @@ export default class RomanController {
 
     // check if user is allowed to request bot 
     if(process.env.ENABLE_WHITELIST === "true"){
-      let whitelist:Whitelist[] = await Whitelistrepo.getWhitelist();
-      if(!whitelist.find(item => {return item.mail === user.email})){
+      // let whitelist:Whitelist[] = await Whitelistrepo.getWhitelist();
+      if(!apputils.whitelist.find(item => {return item.mail === user.email})){
         return "user_not_allowed";
       }
     }

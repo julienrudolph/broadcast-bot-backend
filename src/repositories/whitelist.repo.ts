@@ -1,5 +1,6 @@
 import { connectDB } from '../config/database';
 import { Whitelist } from '../models/whiteList';
+import * as apputils from '../utils/app.utils';
 
 
 
@@ -21,6 +22,7 @@ import { Whitelist } from '../models/whiteList';
         error = true;
       }
     });
+    apputils.setWhiteList();
     return error;
   }
 
@@ -34,6 +36,7 @@ import { Whitelist } from '../models/whiteList';
         error = true;
       }
     });
+    apputils.setWhiteList();
     return error;
   }
 
@@ -87,8 +90,6 @@ import { Whitelist } from '../models/whiteList';
         }
       }));
     }catch(err) {
-      console.log("try");
-
       console.log(err);
       error = true;
     }
@@ -96,6 +97,7 @@ import { Whitelist } from '../models/whiteList';
       await queryRunner.rollbackTransaction();
       return "error_while_transaction";
     }else{
+      apputils.setWhiteList();
       queryRunner.release();
       return 'success';
     }
