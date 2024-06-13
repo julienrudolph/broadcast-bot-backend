@@ -19,21 +19,11 @@ let appKey = process.env.APPKEY;
 let bearer = "Bearer " + process.env.BEARER;
 let romanBase = process.env.ROMAN_BASE;
 
-/*
-  Rebuild whitelisting
-
-  create variable -> onStartup load whitelist
-
-  --> on every action on whitelist add/renew/delete -> overwrite whitelist 
-*/
-
 @Route("roman")
 @Tags("Roman")
 export default class RomanController {
   @Post("/")
   public async getRomanResponse(@Body() body: any, @Header() header: any ): Promise<any> {
-    console.log("Output");
-    console.log(apputils.whitelist);
     romanBase = romanBase.endsWith('/') ? romanBase : `${romanBase}/`;
     const { type, userId, messageId, conversationId } = body;
     if(header.authorization === bearer){

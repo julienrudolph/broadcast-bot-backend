@@ -18,7 +18,6 @@ import * as apputils from '../utils/app.utils';
         let result:Whitelist = null;
         await whitelistRepo.insert(entry);
         // result = await whitelistRepo.save(entry);
-        console.log(result);
         if(result == null){
           error = true;
         }
