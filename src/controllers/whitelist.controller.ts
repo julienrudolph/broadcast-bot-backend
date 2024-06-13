@@ -1,6 +1,6 @@
 import {Get, Post, Route, Tags, Body, Header} from "tsoa";
 import * as WhitelistRepo from "../repositories/whitelist.repo";
-
+import * as util from '../utils/app.utils';
 import {Whitelist} from '../models';
 
 let bearer:string = process.env.WHITELIST_AUTH
@@ -52,7 +52,8 @@ export default class WhitelistController {
             });
           }
         });
-        let tmp = await WhitelistRepo.saveWhitelist(addArray); 
+        let tmp = await WhitelistRepo.saveWhitelist(addArray);
+        // await util.setWhiteList();
         return "success";
       }else{
         return "error_input";
@@ -95,6 +96,7 @@ export default class WhitelistController {
         });
         let tmp = await WhitelistRepo.deleteWhitelistEntries(addArray); 
         if(!tmp){
+          // await util.setWhiteList();
           return "success";
         }
       }else{

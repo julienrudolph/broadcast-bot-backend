@@ -9,8 +9,12 @@ let admins = process.env.ADMINS;
 
 export var whitelist:Whitelist[];
 
-export const setWhiteList = async () => {
-  whitelist = await getWhitelist();
+export let setWhiteList = async (newList?:Whitelist[]) => {
+  if(newList && newList.length > 0){
+    whitelist = newList;
+  }else{
+    whitelist = await getWhitelist();
+  }
 }
 
 export const validateAdminsInDatabase = async () => {
@@ -45,15 +49,16 @@ export const validateAdminsInDatabase = async () => {
           }
       });
       try{
-        actionList.forEach(async elem => {
-        if(elem.action === "add"){
-          await queryRunner.manager.update(ChannelToUser, elem.id , {isAdmin: true});
-          // result = whitelistRepo.save(entry);  
-        }else{
-          await queryRunner.manager.update(ChannelToUser, elem.id, {isAdmin: false});
-          // result = whitelistRepo.delete({mail: elem.mail}); 
-        }
-      });
+        Promise.all(
+          actionList.map(async elem => {
+          if(elem.action === "add"){
+            await queryRunner.manager.update(ChannelToUser, elem.id , {isAdmin: true});
+            // result = whitelistRepo.save(entry);  
+          }else{
+            await queryRunner.manager.update(ChannelToUser, elem.id, {isAdmin: false});
+            // result = whitelistRepo.delete({mail: elem.mail}); 
+          }
+        }));
       }catch(err) {
         await queryRunner.rollbackTransaction();
         return "error_while_transaction";

@@ -2,9 +2,7 @@ import { connectDB } from '../config/database';
 import { Whitelist } from '../models/whiteList';
 import * as apputils from '../utils/app.utils';
 
-
-
-  export const getWhitelist = async (): Promise<Array<Whitelist>> => {
+  export const getWhitelist = async (): Promise<Whitelist[]> => {
     const whitelistRepository = connectDB.getRepository(Whitelist);
     return whitelistRepository.find();
   };
@@ -12,31 +10,39 @@ import * as apputils from '../utils/app.utils';
   export const saveWhitelist = async (payload: Whitelist[]): Promise<boolean> => {
     const whitelistRepo = connectDB.getRepository(Whitelist);
     let error = false;
-    payload.forEach(elem => {
-      let entry:Whitelist = {
-        mail: elem.mail
-      }
-      let result = null;
-      result = whitelistRepo.save(entry);
-      if(result == null){
-        error = true;
-      }
+    Promise.all(
+      payload.map(async elem => {
+        let entry:Whitelist = {
+          mail: elem.mail
+        }
+        let result:Whitelist = null;
+        await whitelistRepo.insert(entry);
+        // result = await whitelistRepo.save(entry);
+        console.log(result);
+        if(result == null){
+          error = true;
+        }
+      })
+    ).then( async () => {
+      apputils.setWhiteList();
     });
-    apputils.setWhiteList();
     return error;
   }
 
   export const deleteWhitelistEntries = async (payload: Whitelist[]): Promise<boolean> => {
     const whitelistRepo = connectDB.getRepository(Whitelist)
     let error = false;
-    payload.forEach(elem => {
-      let result = null;
-      result = whitelistRepo.delete({mail: elem.mail});
-      if(result == null){
-        error = true;
-      }
+    Promise.all(
+      payload.map(elem => {
+        let result = null;
+        result = whitelistRepo.delete({mail: elem.mail});
+        if(result == null){
+          error = true;
+        }
+      })
+    ).then(async () => {
+      await apputils.setWhiteList();
     });
-    apputils.setWhiteList();
     return error;
   }
 
@@ -97,7 +103,6 @@ import * as apputils from '../utils/app.utils';
       await queryRunner.rollbackTransaction();
       return "error_while_transaction";
     }else{
-      apputils.setWhiteList();
       queryRunner.release();
       return 'success';
     }

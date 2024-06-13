@@ -32,6 +32,7 @@ let romanBase = process.env.ROMAN_BASE;
 export default class RomanController {
   @Post("/")
   public async getRomanResponse(@Body() body: any, @Header() header: any ): Promise<any> {
+    console.log("Output");
     console.log(apputils.whitelist);
     romanBase = romanBase.endsWith('/') ? romanBase : `${romanBase}/`;
     const { type, userId, messageId, conversationId } = body;
