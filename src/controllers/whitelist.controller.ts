@@ -17,7 +17,7 @@ export default class WhitelistController {
 
   @Get("/")
   public async getWhitelist(@Header() header:any): Promise<any> {
-    if(this.isAuthenticated(header.authorization)){
+    if(await this.isAuthenticated(header.authorization)){
       // do stuff;
       let whitelist = await WhitelistRepo.getWhitelist();
       if(whitelist && whitelist.length > 0){
@@ -36,7 +36,7 @@ export default class WhitelistController {
 
   @Post("/add")
   public async add(@Body() body: any, @Header() header:any): Promise<any> {
-    if(this.isAuthenticated(header.authorization)){
+    if(await this.isAuthenticated(header.authorization)){
       let whitelist = body;
       if(whitelist && whitelist.length > 0){
         let mailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
@@ -65,7 +65,7 @@ export default class WhitelistController {
 
   @Post("/renewList")
   public async renewList(@Body() body:any, @Header() header:any): Promise<any>{
-    if(this.isAuthenticated(header.authorization)){
+    if(await this.isAuthenticated(header.authorization)){
       if(body && body.length > 0){
         return WhitelistRepo.renewWhitelist(body);
       }else{
@@ -78,7 +78,7 @@ export default class WhitelistController {
 
   @Post("/delete")
   public async delete(@Body() body: any, @Header() header:any): Promise<any> {
-    if(this.isAuthenticated(header.authorization)){
+    if(await this.isAuthenticated(header.authorization)){
       let whitelist = body;
       if(whitelist && whitelist.length > 0){
         let mailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
