@@ -112,7 +112,7 @@ export default class RomanController {
     if(isAdmin){
       return this.broadCastAsset(appKey, body, body.userId);
     }else{
-      return ({type: 'text', text: {data: "Im Broadcast sind keine Antworten möglich. Bei Fragen finden Sie hier https://www.cducsu.btg weitere Informationen."}}) 
+      return ({type: 'text', text: {data: "In diesem Broadcast sind keine Antworten möglich."}}) 
     }
   }
 
@@ -195,7 +195,7 @@ export default class RomanController {
                 });        
       }
       else if(messageText.startsWith("/info")){
-        return ({type: 'text', text: {data: "Sie befinden sich im Kanal: " + process.env.CHANNEL_NAME + "\n Weitere Informationen erhalten Sie unter [hier](https://www.cducsu.de)." }});
+        return ({type: 'text', text: {data: "Sie befinden sich im Kanal: " + process.env.CHANNEL_NAME }});
       }
       else if(messageText.startsWith("/")){
         return ({
